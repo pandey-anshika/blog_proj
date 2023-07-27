@@ -2,16 +2,26 @@ const Blogs = require('../models/blogs');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const upload = multer({dest: 'uploads'});
+// const multer = require('multer');
+
+// const storage = multer.diskStorage({
+//   destination: function(req, file, cb){
+//     cb(null, './uploads/');
+//   },
+//   filename: function(req, file, cb){
+//     cb(null, new Date().toISOString() + file.filename);
+//   }
+// });
+
+// const upload = multer({dest: 'uploads'});
 
 router.get('/', async (req, res) => {
   const blogs = await blog.find().sort('name');
   res.send(blogs);
 });
 
-router.post('/', upload.single('blogimage'), async (req, res) => {
-  console.log(req.file);
+router.post('/', async (req, res) => {
+  // console.log(req.file);
   const { error } = validate(req.body); 
   if (error) return res.status(400).send(error.message);
 

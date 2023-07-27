@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 //     password: Joi.string().min(8).max(20).required()
 //   });
 
-//   return Joi.validate(req, schema);
+//   // return Joi.validate(req, schema);
 //   schema.validate(req);
 // }
 
