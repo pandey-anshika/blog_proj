@@ -2,13 +2,16 @@ const Blogs = require('../models/blogs');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({dest: 'uploads'});
 
 router.get('/', async (req, res) => {
   const blogs = await blog.find().sort('name');
   res.send(blogs);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', upload.single('blogimage'), async (req, res) => {
+  console.log(req.file);
   const { error } = validate(req.body); 
   if (error) return res.status(400).send(error.message);
 

@@ -12,13 +12,17 @@ const User = mongoose.model('User', new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
-    maxlength: 20
+    maxlength: 20,
+    unique: true
   },
   mobileNo: {
     type: Number,
     required: true
   },
-  emailId: String,
+  emailId: {
+    type: String,
+    unique:true
+  },
   bio:{
     type: String,
     minlength: 3,
@@ -30,7 +34,7 @@ function validateUser(user) {
   const schema = {
     name: Joi.string().min(5).max(50).required(),
     password: Joi.string().min(8).max(20).required(),
-    emailId: Joi.string(),
+    emailId: Joi.string().required().email(),
     bio: Joi.string().min(3).max(100),
     mobileNo: Joi.number().required()
   };
@@ -39,3 +43,4 @@ function validateUser(user) {
 }
 
 exports.User = User; 
+exports.validate = validateUser;
