@@ -50,12 +50,12 @@ function validateUser(user) {
 
   return Joi.validate(user, schema);
 }
-// function createPaToken(){
-//   const resetToken = crypto.randomBytes(32, this.toString('hex'));
-//   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-//   console.log(resetToken, this.passwordResetToken); 
-//   return resetToken;
-// }
+function createPaToken(){
+  const resetToken = crypto.randomBytes(32, this.toString('hex'));
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  console.log(resetToken, this.passwordResetToken); 
+  return resetToken;
+}
 exports.User = User; 
 exports.validate = validateUser;
-// exports.createPaToken = createPaToken;
+exports.createPaToken = createPaToken;
