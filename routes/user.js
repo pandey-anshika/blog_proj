@@ -6,7 +6,43 @@ const bcrypt = require('bcrypt');
 const jwt = require('json-web-token');
 const auth = require('../mw/auth');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const randomstring = require('randomstring');
+const { config } = require('process');
+const config = require('config');
+const { options } = require('joi');
 
+const sendPasswordMail = async(name, email ,token)=>{
+    try {
+        const transporter = nodemailer.createTransport({
+            host: 'ldksjh@gmail.com',
+            port: 234,
+            secure: false,
+            requireTLS: true,
+            auth:{
+                user:config.emailId ,
+                pass:config.password
+            }
+        });
+
+        const mailOptions = {
+            from: config.emailId,
+            to: email,
+            subject: 'resetting password',
+            text: options.message
+        }
+        transporter.sendMail(mailOptions, function(error, info){
+            if(error){
+                console.log(error);
+            }
+            else{
+                console.log(info.response);
+            }
+        })
+    } catch (error) {
+        res.status(400);
+    }
+}
 router.get('/me',auth, async(req,res)=>{
     const user = await User.findById(req.body.user_id);
 })
@@ -61,16 +97,23 @@ router.post('/forget-password', async (req, res, next) => {
     })
   });
 
-//   router.post('/forget-password', async (req, res, next) => {
-//     const user = await User.findOne({emailId: req.body.emailId});
-//     if (!user){
-//         const error = new CustomError('can not find user',404);
-//         next(error);
-//     }
-//     const resetToken = user.createPaToken();
-//     await user.save();
+  router.post('/forget-password', async (req, res, next) => {
+    const user = await User.findOne({emailId: req.body.emailId});
+    if (user){
+        const randomString = randomstring.generate();
+        const data = await User.updateOne({emailId: emailId},{$set:{token:randomString}});
 
-//   });
+        sendPasswordMail(user.name, user.emailId, randomString);
+        res.status(200);
+    }
+    else{
+        const error = new CustomError('can not find user',404);
+        next(error);
+    }
+    const resetToken = user.createPaToken();
+    await user.save();
+
+  });
 
   router.post('/reset-password', async (req,res,next)=>{
     
