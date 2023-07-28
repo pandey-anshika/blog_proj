@@ -3,6 +3,13 @@ const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('json-web-token');
+const auth = require('../mw/auth');
+const crypto = require('crypto');
+
+router.get('/me',auth, async(req,res)=>{
+    const user = await User.findById(req.body.user_id);
+})
 
 router.get('/', async(req,res)=>{
     res.send("hello");
@@ -40,4 +47,42 @@ router.put('/:id', async(req,res)=>{
     res.send(user);
 })
 
+router.post('/forget-password', async (req, res, next) => {
+    const user = await User.findOne({emailId: req.body.emailID});
+    if(!user){
+        return res.send('there is no such user');
+    }
+    const token = jwt.sign({_id: user_id}, {expiresIn: '15m'});
+    return user.updateOne({forgotPassword: token}, function(err, user){
+        if(err){
+            return res.status(404).json({error: "error occured"});
+        }
+        else res.status(200);
+    })
+  });
+
+//   router.post('/forget-password', async (req, res, next) => {
+//     const user = await User.findOne({emailId: req.body.emailId});
+//     if (!user){
+//         const error = new CustomError('can not find user',404);
+//         next(error);
+//     }
+//     const resetToken = user.createPaToken();
+//     await user.save();
+
+//   });
+
+  router.post('/reset-password', async (req,res,next)=>{
+    
+        const passwordResetToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
+        const user = await User.findOne({passwordResetToken});
+          if(!user){
+            return next(new ErrorResponse('invalid token',400));
+          }
+          user.password = req.body.password;
+          user.passwordResetToken = undefined;
+          await user.save();
+
+  });
+ 
 module.exports = router; 

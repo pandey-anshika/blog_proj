@@ -1,5 +1,8 @@
 const Joi = require('joi');
 const mongoose = require('mongoose');
+const config = require('config');
+const jwt = require('json-web-token');
+const crypto = require('crypto');
 
 const User = mongoose.model('User', new mongoose.Schema({
   name: {
@@ -27,8 +30,14 @@ const User = mongoose.model('User', new mongoose.Schema({
     type: String,
     minlength: 3,
     maxlength: 100
-  }
+  },
+  forgotPassword:{
+    data: String,
+    default: {}
+  },
+  passwordResetToken: String
 }));
+
 
 function validateUser(user) {
   const schema = {
@@ -41,6 +50,12 @@ function validateUser(user) {
 
   return Joi.validate(user, schema);
 }
-
+// function createPaToken(){
+//   const resetToken = crypto.randomBytes(32, this.toString('hex'));
+//   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+//   console.log(resetToken, this.passwordResetToken); 
+//   return resetToken;
+// }
 exports.User = User; 
 exports.validate = validateUser;
+// exports.createPaToken = createPaToken;

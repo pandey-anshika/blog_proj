@@ -2,12 +2,18 @@ const express = require('express');
 const config = require('config');
 const Joi = require('joi');
 const multer = require('multer');
+const jwt = require('json-web-token');
 const { default: mongoose } = require('mongoose');
 const app = express();
 const blogs = require('./routes/blogs');
 const user = require('./routes/user');
-const {mw} = require('./middleware');
+const {mw} = require('./mw/middleware');
 const login = require('./routes/login');
+
+if(!config.get('jwtPrivateKey')){
+  console.error('fatal error');
+  process.exit(1);
+}
 
 mongoose.connect('mongodb://127.0.0.1:27017/newwprod')
 .then((res)=> console.log('connected to mongodb::'))

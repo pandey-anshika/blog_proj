@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const blogs = await blog.find().sort('name');
+  const blogs = await blog.find().sort( {createdAt : 1} ).select({title:1});
   res.send(blogs);
 });
 
