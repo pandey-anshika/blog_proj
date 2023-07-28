@@ -37,7 +37,7 @@ function validateUser(blog){
         createdAt: Joi.number(),
         updatedAt: Joi.number()
     };
-    return Joi.validate(blog, Schema);
+    return Joi.validate(blog, schema);
 
 }
 exports.Blogs = Blogs;

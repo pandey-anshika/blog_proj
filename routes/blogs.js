@@ -1,10 +1,10 @@
-const Blogs = require('../models/blogs'); 
+const {Blogs, validate} = require('../models/blogs'); 
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const blogs = await blog.find().sort( {createdAt : 1} ).select({title:1});
+  const blogs = await Blogs.find().sort( {createdAt : 1} ).select({title:1});
   res.send(blogs);
 });
 
