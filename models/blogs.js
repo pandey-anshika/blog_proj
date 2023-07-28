@@ -41,3 +41,4 @@ function validateUser(blog){
 
 }
 exports.Blogs = Blogs;
+exports.validate = validateUser;
