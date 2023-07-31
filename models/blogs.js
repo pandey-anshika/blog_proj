@@ -17,7 +17,10 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
         type: String,
         required: true
     },
-    createdBy: String,
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -26,6 +29,7 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
         type: Date,
         default: Date.now
     },
+    tags: ['DS', 'AI', 'ML', 'JAVA', 'Others']
 }));
 
 function validateUser(blog){
@@ -35,7 +39,8 @@ function validateUser(blog){
         desc: Joi.string(),
         createdBy: Joi.string(),
         createdAt: Joi.number(),
-        updatedAt: Joi.number()
+        updatedAt: Joi.number(),
+        tags: Joi.array(),
     };
     return Joi.validate(blog, schema);
 

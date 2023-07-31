@@ -9,8 +9,8 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const randomstring = require('randomstring');
 const { config } = require('process');
-const config = require('config');
 const { options } = require('joi');
+const {Blogs, validate} = require('../models/blogs'); 
 
 const sendPasswordMail = async(name, email ,token)=>{
     try {
@@ -45,6 +45,19 @@ const sendPasswordMail = async(name, email ,token)=>{
 }
 router.get('/me',auth, async(req,res)=>{
     const user = await User.findById(req.body.user_id);
+    res.send(user);
+    const blogs = await Blogs.find(createdBy);
+    Blogs.aggregate({
+        $match: {user: {$in: blogs}}
+    })
+    // const blogs = await Blogs.find(createdBy);
+    // if(User.name.equals(Blogs.createdBy)){
+    //     res.send(blogs);
+    // }
+    // else{
+    //     res.send('error occured');
+    // }
+    
 })
 
 router.get('/', async(req,res)=>{
@@ -83,19 +96,19 @@ router.put('/:id', async(req,res)=>{
     res.send(user);
 })
 
-router.post('/forget-password', async (req, res, next) => {
-    const user = await User.findOne({emailId: req.body.emailID});
-    if(!user){
-        return res.send('there is no such user');
-    }
-    const token = jwt.sign({_id: user_id}, {expiresIn: '15m'});
-    return user.updateOne({forgotPassword: token}, function(err, user){
-        if(err){
-            return res.status(404).json({error: "error occured"});
-        }
-        else res.status(200);
-    })
-  });
+// router.post('/forget-password', async (req, res, next) => {
+//     const user = await User.findOne({emailId: req.body.emailID});
+//     if(!user){
+//         return res.send('there is no such user');
+//     }
+//     const token = jwt.sign({_id: user_id}, {expiresIn: '15m'});
+//     return user.updateOne({forgotPassword: token}, function(err, user){
+//         if(err){
+//             return res.status(404).json({error: "error occured"});
+//         }
+//         else res.status(200);
+//     })
+//   });
 
   router.post('/forget-password', async (req, res, next) => {
     const user = await User.findOne({emailId: req.body.emailId});

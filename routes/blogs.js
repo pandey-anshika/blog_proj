@@ -8,6 +8,11 @@ router.get('/', async (req, res) => {
   res.send(blogs);
 });
 
+router.get('/:id', async(req,res)=>{
+  const blogs = await Blogs.find().select(createdBy);
+  res.send(blogs);
+});
+
 router.post('/', async (req, res) => {
   const { error } = validate(req.body); 
   if (error) return res.status(400).send(error.message);
@@ -18,7 +23,8 @@ router.post('/', async (req, res) => {
     shortDes: req.body.shortDes,
     createdBy: req.body.createdBy,
     createdAt: req.body.createdAt,
-    updatedBy: req.body.updatedBy
+    updatedBy: req.body.updatedBy,
+    tags: req.body.tags
   });
   blog = await blog.save();
   res.send(blog);
@@ -32,7 +38,8 @@ router.put('/:id', async (req, res) => {
     { 
       title: req.body.title,
       desc: req.body.desc,
-      shortDes: req.body.shortDes
+      shortDes: req.body.shortDes,
+      tags: req.body.tags
     }, { new: true });
 
   if (!blog) return res.status(404).send('blog was not found.');
