@@ -10,7 +10,7 @@ const nodemailer = require('nodemailer');
 const randomstring = require('randomstring');
 const { config } = require('process');
 const { options } = require('joi');
-const {Blogs, validate} = require('../models/blogs'); 
+const {Blogs} = require('../models/blogs'); 
 
 const sendPasswordMail = async(name, email ,token)=>{
     try {
@@ -49,7 +49,7 @@ router.get('/me',auth, async(req,res)=>{
     const blogs = await Blogs.find(createdBy);
     Blogs.aggregate({
         $match: {user: {$in: blogs}}
-    })
+    });
     // const blogs = await Blogs.find(createdBy);
     // if(User.name.equals(Blogs.createdBy)){
     //     res.send(blogs);
