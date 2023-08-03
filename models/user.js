@@ -48,7 +48,7 @@ function validateUser(user) {
     mobileNo: Joi.number().required()
   };
 
-  return Joi.validate(user, schema);
+  return Joi.valid(user, schema);
 }
 function createPaToken(){
   const resetToken = crypto.randomBytes(32, this.toString('hex'));

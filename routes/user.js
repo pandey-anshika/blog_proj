@@ -46,10 +46,10 @@ const sendPasswordMail = async(name, email ,token)=>{
 router.get('/me',auth, async(req,res)=>{
     const user = await User.findById(req.body.user_id);
     res.send(user);
-    const blogs = await Blogs.find(createdBy);
-    Blogs.aggregate({
-        $match: {user: {$in: blogs}}
-    });
+    // const blogs = await Blogs.find(createdBy);
+    // Blogs.aggregate({
+    //     $match: {user: {$in: blogs}}
+    // });
     // const blogs = await Blogs.find(createdBy);
     // if(User.name.equals(Blogs.createdBy)){
     //     res.send(blogs);

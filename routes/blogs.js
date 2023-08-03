@@ -8,10 +8,10 @@ router.get('/', async (req, res) => {
   res.send(blogs);
 });
 
-router.get('/:id', async(req,res)=>{
-  const blogs = await Blogs.find().select(createdBy);
-  res.send(blogs);
-});
+// router.get('/:id', async(req,res)=>{
+//   const blogs = await Blogs.find().select(createdBy);
+//   res.send(blogs);
+// });
 
 router.post('/', async (req, res) => {
   const { error } = validate(req.body); 
@@ -23,8 +23,7 @@ router.post('/', async (req, res) => {
     shortDes: req.body.shortDes,
     createdBy: req.body.createdBy,
     createdAt: req.body.createdAt,
-    updatedBy: req.body.updatedBy,
-    tags: req.body.tags
+    updatedBy: req.body.updatedBy
   });
   blog = await blog.save();
   res.send(blog);

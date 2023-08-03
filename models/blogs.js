@@ -42,7 +42,7 @@ function validateUser(blog){
         updatedAt: Joi.number(),
         tags: Joi.array(),
     };
-    return Joi.validate(blog, schema);
+    return Joi.valid(blog, schema);
 
 }
 exports.Blogs = Blogs;
