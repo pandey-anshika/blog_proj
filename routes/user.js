@@ -43,25 +43,11 @@ const sendPasswordMail = async(name, email ,token)=>{
         res.status(400);
     }
 }
-router.get('/me',auth, async(req,res)=>{
-    const user = await User.findById(req.body.user_id);
-    res.send(user);
-    // const blogs = await Blogs.find(createdBy);
-    // Blogs.aggregate({
-    //     $match: {user: {$in: blogs}}
-    // });
-    // const blogs = await Blogs.find(createdBy);
-    // if(User.name.equals(Blogs.createdBy)){
-    //     res.send(blogs);
-    // }
-    // else{
-    //     res.send('error occured');
-    // }
-    
-})
 
 router.get('/', async(req,res)=>{
-    res.send("hello");
+    //res.send("hello");
+    const user = await User.find();
+    res.send(user);
 });
 
 router.post('/', async(req,res)=>{
