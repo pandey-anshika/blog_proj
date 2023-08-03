@@ -1,4 +1,4 @@
-const {User, validate, createPaToken} = require('../models/user');
+const {User, validate, createToken} = require('../models/user');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -51,35 +51,101 @@ router.get('/', async(req,res)=>{
 });
 
 router.post('/', async(req,res)=>{
-    const e = validate(req.body);
-    if (e) return res.status(400).send(e.message);
+    // const e = validate(req.body);
+    // if (e) return res.status(400).send(e.message);
     
-    let user = await User.findOne({emailId: req.body.emailId});
-    if(user) return res.status(400).send('already registered.');
+    // let user = await User.findOne({emailId: req.body.emailId});
+    // if(user) return res.status(400).send('already registered.');
 
-    user = new User({
-        name: req.body.name,
-        mobileNo: req.body.mobileNo,
-        emailId: req.body.emailId,
-        password: req.body.password,
-        bio: req.body.bio
-    });
+    // user = new User({
+    //     name: req.body.name,
+    //     mobileNo: req.body.mobileNo,
+    //     emailId: req.body.emailId,
+    //     password: req.body.password,
+    //     bio: req.body.bio
+    // });
+    // const salt = await bcrypt.genSalt(10);
+    // user.password = await bcrypt.hash(user.password, salt);
+
+    // user = await user.save();
+    // res.send(user);
+    const{name, emailId, password, mobileNo, bio}= req.body;
+    let exUser;
+    try{
+       exUser= await User.findOne({emailId:req.body.emailId});
+    }
+    catch(err){
+       return console.log(err);
+    }
+    if(exUser){
+       return res.status(400).send('error occured');
+    }
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+     //user.password = await bcrypt.hash(user.password, salt);
+    const hashPassword = bcrypt.hashSync(password, salt);
+    const user = new User({
+       name,
+       password: hashPassword,
+       emailId,
+       mobileNo,
+       bio,
+       blogs: [],
+    });
 
-    user = await user.save();
-    res.send(user);
+    try {
+       await user.save();
+    } catch (err) {
+       return console.log(err);
+    }
+    return res.status(201);
 });
 
+router.post('/login',async(req,res)=>{
+    const { password} = req.body;
+    let exUser;
+     try{
+        exUser= await User.findOne({emailId: req.body.emailId});
+     }
+     catch(err){
+        return console.log(err);
+     }
+     if(!exUser){
+        return res.status(404).send('error occured');
+     }
+     const isPwCrt = bcrypt.compareSync(password, exUser.password);
+     if(!isPwCrt){
+        return res.status(400).json({message: 'incorrect password'});
+     }
+     return res.status(200);
+    });
+
 router.put('/:id', async(req,res)=>{
-    const e = validate(req.body);
-    if (e) return res.status(400).send(e.message);
-    const user = await User.findByIdAndUpdate(req.params.id ,{
-        name: req.body.name,
-        bio: req.body.bio
-    }, {new: true});
-    if(!user) return res.status(404).send('invalid id or something is missing');
-    res.send(user);
+    const {name, bio} = req.body;
+    //if (e) return res.status(400).send(e.message);
+    // const user = await User.findByIdAndUpdate(req.params.id ,{
+    //     name: req.body.name,
+    //     bio: req.body.bio
+    // }, {new: true});
+    // if(!user) return res.status(404).send('invalid id or something is missing');
+    // res.send(user);
+    const id = new mongoose.Types.ObjectId(req.params.id) ;
+    console.log(id,"id")
+    let user;
+    try {
+        user = await User.findOneAndUpdate({_id : id }, {
+            bio,
+            name
+        },{new:true});
+        console.log(user,"user")
+        if(!user){
+            return res.status(500);
+        }
+        return res.status(200).send(user);
+
+    } catch (error) {
+        return console.log(error);
+    }
+   
 })
 
 // router.post('/forget-password', async (req, res, next) => {
@@ -106,10 +172,12 @@ router.put('/:id', async(req,res)=>{
         res.status(200);
     }
     else{
-        const error = new CustomError('can not find user',404);
-        next(error);
+        // const error = new CustomError('can not find user',404);
+        // next(error);
+        res.status(404);
     }
-    const resetToken = user.createPaToken();
+    const resetToken = user.createToken();
+    console.log(resetToken);
     await user.save();
 
   });

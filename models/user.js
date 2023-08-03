@@ -15,7 +15,6 @@ const User = mongoose.model('User', new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
-    maxlength: 20,
     unique: true
   },
   mobileNo: {
@@ -35,7 +34,8 @@ const User = mongoose.model('User', new mongoose.Schema({
     data: String,
     default: {}
   },
-  passwordResetToken: String
+  passwordResetToken: String,
+  blogs:[{type: mongoose.Types.ObjectId, ref: "Blogs", required:true}]
 }));
 
 
@@ -58,4 +58,4 @@ function createPaToken(){
 }
 exports.User = User; 
 exports.validate = validateUser;
-exports.createPaToken = createPaToken;
+exports.createToken = createPaToken;
