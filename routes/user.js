@@ -113,10 +113,10 @@ router.post('/login',async(req,res)=>{
         return res.status(404).send('error occured');
      }
      const isPwCrt = bcrypt.compareSync(password, exUser.password);
-     if(!isPwCrt){
+     if(isPwCrt){
         return res.status(400).json({message: 'incorrect password'});
      }
-     return res.status(200);
+     return res.status(200).json({message:'correct password'});
     });
 
 router.put('/:id', async(req,res)=>{
@@ -180,7 +180,7 @@ router.put('/:id', async(req,res)=>{
     console.log(resetToken);
     await user.save();
 
-  });
+ });
 
   router.post('/reset-password', async (req,res,next)=>{
     
