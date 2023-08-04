@@ -29,10 +29,7 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
         type: Date,
         default: Date.now
     },
-    tags: ['DS', 'AI', 'ML', 'JAVA', 'Others'],
-    id:{
-        type: Number
-    }
+    tags: ['DS', 'AI', 'ML', 'JAVA', 'Others']
 }));
 
 function validateUser(blog){

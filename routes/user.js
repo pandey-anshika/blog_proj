@@ -45,108 +45,142 @@ const sendPasswordMail = async(name, email ,token)=>{
 }
 
 router.get('/', async(req,res)=>{
-    //res.send("hello");
-    const user = await User.find();
-    res.send(user);
+    const user = await User.find().select('-password');
+    res.status(200).send(user);
 });
 
 router.post('/', async(req,res)=>{
-    // const e = validate(req.body);
-    // if (e) return res.status(400).send(e.message);
-    
-    // let user = await User.findOne({emailId: req.body.emailId});
-    // if(user) return res.status(400).send('already registered.');
-
-    // user = new User({
-    //     name: req.body.name,
-    //     mobileNo: req.body.mobileNo,
-    //     emailId: req.body.emailId,
-    //     password: req.body.password,
-    //     bio: req.body.bio
-    // });
-    // const salt = await bcrypt.genSalt(10);
-    // user.password = await bcrypt.hash(user.password, salt);
-
-    // user = await user.save();
-    // res.send(user);
+    const error = []
     const{name, emailId, password, mobileNo, bio}= req.body;
-    let exUser;
+    if (!name){
+        error.push({error:'name missing', errorType: 'validation'})
+    }
+    if (!emailId){
+        error.push({error:'emailId missing', errorType: 'validation'})
+    }
+
+    if (!password){
+        error.push({error:'password missing', errorType: 'validation'})
+    }
+
+    if (!mobileNo){
+        error.push({error:'mobileNo missing', errorType: 'validation'})
+    }
+    console.log("error:: ",error)
+    if (error.length){
+        return res.status(400).send(error)
+    }
+
     try{
-       exUser= await User.findOne({emailId:req.body.emailId});
+       const exUser = await User.findOne({emailId:req.body.emailId});
+        if(exUser){
+            return res.status(400).send('User already exists');
+        }
     }
     catch(err){
-       return console.log(err);
+       console.log(err);
+       return res.status(500).send('Something went wrong')
     }
-    if(exUser){
-       return res.status(400).send('error occured');
-    }
+
     const salt = await bcrypt.genSalt(10);
-     //user.password = await bcrypt.hash(user.password, salt);
     const hashPassword = bcrypt.hashSync(password, salt);
     const user = new User({
        name,
        password: hashPassword,
        emailId,
        mobileNo,
-       bio,
-       blogs: [],
+       bio
     });
 
     try {
-       await user.save();
+      const newUser =  await user.save();
+      return res.status(201).send(newUser);
+
     } catch (err) {
-       return console.log(err);
+       return res.status(500).send(err.message);
     }
-    return res.status(201).json({message:'user registered'});
+
 });
 
 router.post('/login',async(req,res)=>{
-    const { password} = req.body;
-    let exUser;
-     try{
-        exUser= await User.findOne({emailId: req.body.emailId});
-     }
-     catch(err){
-        return console.log(err);
-     }
-     if(!exUser){
-        return res.status(404).send('error occured');
-     }
-     const isPwCrt = bcrypt.compareSync(password, exUser.password);
-     if(isPwCrt){
-        return res.status(400).json({message: 'incorrect password'});
-     }
-     return res.status(200).json({message:'correct password'});
+    const { emailId, password} = req.body;
+    if(emailId == "" || password==""){
+        res.json({message: "Empty credentials"});
+    }else{
+        User.findOne({emailId: req.body.emailId})
+        .then(data => {
+            if(data.length){
+                const hashPassword = data[0].password;
+                bcrypt.compare(password, hashPassword).then(result =>{
+                    if(result){
+                        res.json({message: "login successful"});
+                    }else{
+                        res.json({status: "Failed", message: "invalid password"})
+                    }
+                })
+                .catch(err =>{
+                      res.json({message: "error occured while comparing password"})
+                })
+            }else{
+                res.json({message: "invalid details entered"});
+            }
+        })
+        .catch(err => {
+            res.json({status: "failed", message: "error while checking for existing user"})
+        })
+    }
+    
+    
+    // let exUser;
+    //  try{
+    //     exUser= await User.findOne({emailId: req.body.emailId});
+    //  }
+    //  catch(err){
+    //     return console.log(err);
+    //  }
+    //  if(!exUser){
+    //     return res.status(404).send('error occured');
+    //  }
+
+    //  const isPwCrt = bcrypt.compareSync(password, exUser.password);
+    //  if(!isPwCrt){
+    //     return res.status(400).json({message: 'incorrect password'});
+    //  }
+    //  return res.status(200).json({message:'correct password'});
     });
 
 router.put('/:id', async(req,res)=>{
+    const error = [];
     const {name, bio} = req.body;
-    //if (e) return res.status(400).send(e.message);
-    // const user = await User.findByIdAndUpdate(req.params.id ,{
-    //     name: req.body.name,
-    //     bio: req.body.bio
-    // }, {new: true});
-    // if(!user) return res.status(404).send('invalid id or something is missing');
-    // res.send(user);
+  if (!name){
+      error.push({error:'name missing', errorType: 'validation'})
+  }
+  if (!bio){
+      error.push({error:'bio missing', errorType: 'validation'})
+  }
+  console.log("error:: ",error)
+  if (error.length){
+      return res.status(400).send(error);
+  }
+
     const id = new mongoose.Types.ObjectId(req.params.id) ;
-    console.log(id,"id")
-    let user;
+
     try {
-        user = await User.findOneAndUpdate({_id : id }, {
+        const user = await User.findOneAndUpdate({_id : id }, {
             bio,
             name
         },{new:true});
-        console.log(user,"user")
+        console.log(user,"user");
         if(!user){
-            return res.status(500);
+            return res.status(500).send('something is missing');
         }
         return res.status(200).send(user);
 
     } catch (error) {
-        return console.log(error);
+        return console.log(error.message);
     }
    
-})
+});
 
 // router.post('/forget-password', async (req, res, next) => {
 //     const user = await User.findOne({emailId: req.body.emailID});
@@ -164,23 +198,28 @@ router.put('/:id', async(req,res)=>{
 
   router.post('/forget-password', async (req, res, next) => {
     const user = await User.findOne({emailId: req.body.emailId});
-    if (user){
-        const randomString = randomstring.generate();
-        const data = await User.updateOne({emailId: req.body.emailId},{$set:{token:randomString}});
+    if (!user) {
+        res.status(404).send('The email address does not exist.');
+        return;
+      }
+      const resetPasswordLink = await sendPasswordMail(user);
+      res.status(200).send({ resetPasswordLink });
+    });
+    // if (user){
+    //     const randomString = randomstring.generate();
+    //     const data = await User.updateOne({emailId: emailId},{$set:{token:randomString}});
 
-        sendPasswordMail(user.name, user.emailId, randomString);
-        res.status(200);
-    }
-    else{
-        // const error = new CustomError('can not find user',404);
-        // next(error);
-        res.status(404);
-    }
-    const resetToken = user.createToken();
-    console.log(resetToken);
-    await user.save();
+    //     sendPasswordMail(user.name, user.emailId, randomString);
+    //     res.status(200);
+    // }
+    // else{
+    //     res.status(404);
+    // }
+    // const resetToken = user.createToken();
+    // console.log(resetToken);
+    // await user.save();
 
- });
+ //});
 
   router.post('/reset-password', async (req,res,next)=>{
     

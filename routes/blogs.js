@@ -9,93 +9,92 @@ router.get('/', async (req, res) => {
   res.send(blogs);
 });
 
-// router.get('/:id', async(req,res)=>{
-//   const blogs = await Blogs.find().select(createdBy);
-//   res.send(blogs);
-// });
-
-
 router.post('/', async (req, res) => {
-  // const { error } = validate(req.body); 
-  // if (error) return res.status(400).send(error.message);
+  const error = [];
+  const {title, desc, shortDes, createdBy}= req.body;
+  if (!title){
+      error.push({error:'title missing', errorType: 'validation'})
+  }
+  if (!desc){
+      error.push({error:'desc missing', errorType: 'validation'})
+  }
 
-  // const blog = new Blogs({ 
-  //   title: req.body.title,
-  //   desc: req.body.desc,
-  //   shortDes: req.body.shortDes,
-  //   createdBy: req.body.createdBy,
-  //   createdAt: req.body.createdAt,
-  //   updatedBy: req.body.updatedBy
-  // });
-  // blog = await blog.save();
-  // res.send(blog);
-  //const {title, shortDes, desc, createdBy, createdAt, updatedAt, id}= req.body;
-  let exUser;
+  if (!shortDes){
+      error.push({error:'short description missing', errorType: 'validation'})
+  }
+  console.log("error:: ",error)
+  if (error.length){
+      return res.status(400).send(error);
+  }
+
   try{
-     exUser= await User.findOne({name:req.body.name});
+     const alBlog= await User.findOne({name:req.body.name});
+     if(alBlog){
+      return res.status(400).send('already existed');
+   }
   }
   catch(err){
-     return console.log(err);
+    console.log(err);
+    return res.status(500).send('something went wrong');
   }
-  if(exUser){
-     return res.status(400).send('error occured');
-  }
+  
     const blog = new Blogs({
-        title: req.body.title,
-        desc: req.body.desc,
-        shortDes: req.body.shortDes,
+        title,
+        desc,
+        shortDes,
         createdAt: req.body.createdAt,
-        createdBy:req.body.createdBy,
-        updatedAt: req.body.updatedAt,
-        id: req.body.id
+        createdBy,
+        updatedAt: req.body.updatedAt
     });
     try {
-      await blog.save();
+      const newBlog = await blog.save();
+      return res.status(201).send(newBlog);
    } catch (err) {
-      return console.log(err);
+      return res.status(500).send(err.message);
    }
-   return res.status(201);
     
 });
 
 router.put('/:id', async (req, res) => {
-  // const { error } = validate(req.body); 
-  // if (error) return res.status(400).send(error.message);
-
-  // const blog = await Blogs.findByIdAndUpdate(req.params.id,
-  //   { 
-  //     title: req.body.title,
-  //     desc: req.body.desc,
-  //     shortDes: req.body.shortDes,
-  //     tags: req.body.tags
-  //   }, { new: true });
-
-  // if (!blog) return res.status(404).send('blog was not found.');
-  
-  // res.send(blog);
+  const error = [];
   const {title, desc}= req.body;
-    let blog;
+  if (!title){
+    error.push({error:'title missing', errorType: 'validation'})
+}
+if (!desc){
+    error.push({error:'description missing', errorType: 'validation'})
+}
+console.log("error:: ",error)
+if (error.length){
+    return res.status(400).send(error);
+}
+
+  const id = new mongoose.Types.ObjectId(req.params.id) ;
+
     try {
-        blog = await Blogs.findOneAndUpdate({id: req.params.id}, {
+        const blog = await Blogs.findOneAndUpdate({_id: id}, {
             title,
             desc
         },{new: true});
-        res.send("done");
+        res.send(blog);
+        if(!blog){
+          return res.status(500).json({message: "something is missing"});
+      }
+      return res.status(200).send(blog);
     } catch (error) {
-        return console.log(error);
+        return console.log(error.message);
     }
-    if(!blog){
-        return res.status(500);
-    }
-    return res.status(200);
 });
 
 router.delete('/:id', async (req, res) => {
-  const blog = await Blogs.findOneAndDelete({id: req.params.id});
-
-  if (!blog) return res.status(404);
-
-  res.send(blog);
+  const id = new mongoose.Types.ObjectId(req.params.id) ;
+  const blog = await Blogs.findOneAndDelete({_id: id});
+  
+  if (!blog) {
+    return res.status(404).json({message: "blog does'nt exist with this id"});
+  };
+  return res.status(200).send(blog);
+  
 });
 
 router.get('/:id', async (req, res) => {
