@@ -97,7 +97,7 @@ router.post('/', async(req,res)=>{
     } catch (err) {
        return console.log(err);
     }
-    return res.status(201);
+    return res.status(201).json({message:'user registered'});
 });
 
 router.post('/login',async(req,res)=>{
@@ -166,7 +166,7 @@ router.put('/:id', async(req,res)=>{
     const user = await User.findOne({emailId: req.body.emailId});
     if (user){
         const randomString = randomstring.generate();
-        const data = await User.updateOne({emailId: emailId},{$set:{token:randomString}});
+        const data = await User.updateOne({emailId: req.body.emailId},{$set:{token:randomString}});
 
         sendPasswordMail(user.name, user.emailId, randomString);
         res.status(200);
