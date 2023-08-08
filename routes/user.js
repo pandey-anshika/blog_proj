@@ -141,9 +141,9 @@ router.post('/login',async(req,res)=>{
                         res.json({status: "Failed", message: "invalid password"});
                     }
                 })
-                // .catch(err =>{
-                //       res.json({message: "error occured while comparing password"});
-                // })
+                .catch(err =>{
+                      res.json({message: "error occured while comparing password"});
+                })
             }else{
                 res.json({message: "invalid details entered"});
             }
