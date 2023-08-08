@@ -31,7 +31,10 @@ const User = mongoose.model('User', new mongoose.Schema({
     maxlength: 100
   },
   passwordResetToken: String,
-  blogs:[{type: mongoose.Types.ObjectId, ref: "Blogs", required:true}]
+  Tags:{
+    type: Array,
+    default: []
+  }
 }));
 
 
@@ -41,7 +44,8 @@ function validateUser(user) {
     password: Joi.string().min(8).max(20).required(),
     emailId: Joi.string().required().email(),
     bio: Joi.string().min(3).max(100),
-    mobileNo: Joi.number().required()
+    mobileNo: Joi.number().required(),
+    Tags: Joi.array().items(Joi.string().min(3).max(100))
   };
 
   return Joi.valid(user, schema);

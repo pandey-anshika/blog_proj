@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const error = [];
-  const {title, desc, shortDes, createdBy}= req.body;
+  const {title, desc, shortDes, createdBy, tags}= req.body;
   if (!title){
       error.push({error:'title missing', errorType: 'validation'})
   }
@@ -22,6 +22,33 @@ router.post('/', async (req, res) => {
   if (!shortDes){
       error.push({error:'short description missing', errorType: 'validation'})
   }
+  if(createdBy){
+    let user = null ;
+    try{
+      user = await User.findOne({name:createdBy});
+    }
+    catch(err){
+      console.log(err);
+      return res.status(500).send('something went wrong');
+    }
+    if(!user){
+      error.push({error:'user not found', errorType: 'validation'})
+    }
+  }
+  if(tags){
+    let tags = null ;
+    try{
+      tags = await User.findOne({Tags:tags});
+    }
+    catch(err){
+      console.log(err);
+      return res.status(500).send('something went wrong');
+    }
+    if(!tags){
+      error.push({error:'tags not found', errorType: 'validation'})
+    }
+  }
+
   console.log("error:: ",error)
   if (error.length){
       return res.status(400).send(error);

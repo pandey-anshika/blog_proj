@@ -54,7 +54,7 @@ router.get('/', async(req,res)=>{
 
 router.post('/', async(req,res)=>{
     const error = []
-    const{name, emailId, password, mobileNo, bio}= req.body;
+    const{name, emailId, password, mobileNo, bio, Tags}= req.body;
     if (!name){
         error.push({error:'name missing', errorType: 'validation'})
     }
@@ -69,6 +69,14 @@ router.post('/', async(req,res)=>{
     if (!mobileNo){
         error.push({error:'mobileNo missing', errorType: 'validation'})
     }
+    if(Tags){
+        const tags = Tags.split(',');
+        for (let i = 0; i < tags.length; i++) {
+            const tag = tags[i].trim();
+            if (!tag){
+                error.push({error:'tag missing', errorType: 'validation'})
+            }
+        }}
     console.log("error:: ",error)
     if (error.length){
         return res.status(400).send(error)
