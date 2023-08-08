@@ -133,7 +133,7 @@ router.post('/login',async(req,res)=>{
     // }
     // });
 
-router.put('/:id', async(req,res)=>{
+router.put('/:id',auth, async(req,res)=>{
     const error = [];
     const {name, bio} = req.body;
   if (!name){
