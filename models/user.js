@@ -30,10 +30,6 @@ const User = mongoose.model('User', new mongoose.Schema({
     minlength: 3,
     maxlength: 100
   },
-  forgotPassword:{
-    data: String,
-    default: {}
-  },
   passwordResetToken: String,
   blogs:[{type: mongoose.Types.ObjectId, ref: "Blogs", required:true}]
 }));

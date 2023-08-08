@@ -1,5 +1,7 @@
 const {User, validate, createToken} = require('../models/user');
 const mongoose = require('mongoose');
+const Token = require('../models/token');
+const Joi = require('joi');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
@@ -16,6 +18,7 @@ const sendPasswordMail = async(name, email ,token)=>{
     try {
         const transporter = nodemailer.createTransport({
             host: 'ldksjh@gmail.com',
+            service: 'gmail',
             port: 234,
             secure: false,
             requireTLS: true,
@@ -115,38 +118,20 @@ router.post('/login',async(req,res)=>{
                     if(result){
                         res.json({message: "login successful"});
                     }else{
-                        res.json({status: "Failed", message: "invalid password"})
+                        res.json({status: "Failed", message: "invalid password"});
                     }
                 })
                 .catch(err =>{
-                      res.json({message: "error occured while comparing password"})
+                      res.json({message: "error occured while comparing password"});
                 })
             }else{
                 res.json({message: "invalid details entered"});
             }
         })
         .catch(err => {
-            res.json({status: "failed", message: "error while checking for existing user"})
+            res.json({status: "failed", message: "error while checking for existing user"});
         })
     }
-    
-    
-    // let exUser;
-    //  try{
-    //     exUser= await User.findOne({emailId: req.body.emailId});
-    //  }
-    //  catch(err){
-    //     return console.log(err);
-    //  }
-    //  if(!exUser){
-    //     return res.status(404).send('error occured');
-    //  }
-
-    //  const isPwCrt = bcrypt.compareSync(password, exUser.password);
-    //  if(!isPwCrt){
-    //     return res.status(400).json({message: 'incorrect password'});
-    //  }
-    //  return res.status(200).json({message:'correct password'});
     });
 
 router.put('/:id', async(req,res)=>{
@@ -181,57 +166,72 @@ router.put('/:id', async(req,res)=>{
     }
    
 });
-
-// router.post('/forget-password', async (req, res, next) => {
-//     const user = await User.findOne({emailId: req.body.emailID});
-//     if(!user){
-//         return res.send('there is no such user');
-//     }
 //     const token = jwt.sign({_id: user_id}, {expiresIn: '15m'});
 //     return user.updateOne({forgotPassword: token}, function(err, user){
-//         if(err){
-//             return res.status(404).json({error: "error occured"});
-//         }
-//         else res.status(200);
-//     })
-//   });
+//         if(err)    return res.status(404).json({error: "error occured"});
 
   router.post('/forget-password', async (req, res, next) => {
-    const user = await User.findOne({emailId: req.body.emailId});
-    if (!user) {
-        res.status(404).send('The email address does not exist.');
-        return;
-      }
-      const resetPasswordLink = await sendPasswordMail(user);
-      res.status(200).send({ resetPasswordLink });
-    });
-    // if (user){
-    //     const randomString = randomstring.generate();
-    //     const data = await User.updateOne({emailId: emailId},{$set:{token:randomString}});
-
-    //     sendPasswordMail(user.name, user.emailId, randomString);
-    //     res.status(200);
-    // }
-    // else{
-    //     res.status(404);
-    // }
-    // const resetToken = user.createToken();
-    // console.log(resetToken);
-    // await user.save();
-
- //});
-
-  router.post('/reset-password', async (req,res,next)=>{
-    
-        const passwordResetToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
-        const user = await User.findOne({passwordResetToken});
-          if(!user){
-            return next(new ErrorResponse('invalid token',400));
-          }
-          user.password = req.body.password;
-          user.passwordResetToken = undefined;
-          await user.save();
+    const {emailId} = req.body;
+    if(emailId){
+        const user = await User.findOne({emailId: req.body.emailId});
+        if(user){
+            const key = user._id + "secertkey";
+            const token = jwt.sign({user: user._id},key ,{
+                expiresIn: '5m',
+            })
+            sendPasswordMail(user.name, user.emailId, token.token);
+            return res.status(200).json({message: 'message sent'});
+        }
+        else{
+            return res.send('there is no such user');
+        }
+    }
+    else{
+        return res.status(400).send('provide valid email!');
+    }
 
   });
- 
+    
+  router.post('/reset-password', async (req,res,next)=>{
+    const {emailId, newPassword, confirmPassword} = req.body;
+     const {token,id}=req.params;
+    if(emailId){
+        const user = await User.findOne({emailId: req.body.emailId});
+        if(user){
+            try {
+                if(newPassword & confirmPassword & id & token){
+                    if(newPassword === confirmPassword){
+                        const key = user._id + `secertkey`; 
+                        const isValid = await jwt.verify(token, key);
+                        if(isValid){
+                            const userr = await User.findOneAndUpdate({_id : id});
+                            const genSalt = await bcrypt.genSalt(10);
+                            const hashPassword = await bcrypt.hash(newPassword, genSalt);
+                            const isSuccess = await User.findByIdAndUpdate(userr, {
+                                $set:{
+                                    password: hashPassword,                           
+                                },
+                            });
+                            if(isSuccess){
+                                return res.status(200).json({message: "Password changed"});
+                            }
+                        }
+                        else{
+                            return res.status(400).json({message: 'link expired'});
+                        }
+                    }else{
+                        return res.status(400).json({message: "both the password does'nt match"});
+                    }
+                }     
+            } catch (error) {
+                return res.status(400).json({message: error.message});
+            }
+        }
+    }else{
+        return res.status(400).send('provide valid email')
+    }
+    
+  });
+        
+  
 module.exports = router; 
