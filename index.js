@@ -7,6 +7,7 @@ const { default: mongoose } = require('mongoose');
 const app = express();
 const blogs = require('./routes/blogs');
 const user = require('./routes/user');
+const auth = require('./mw/auth')
 const {mw} = require('./mw/middleware');
 
 if(!config.get('jwtPrivateKey')){
@@ -22,7 +23,7 @@ app.use(express.json());
 app.use('/api/blogs',blogs);
 app.use('/api/user',user);
 app.use(mw);
-
+app.use('/api/auth',auth);
 
 
 var storage = multer.diskStorage({

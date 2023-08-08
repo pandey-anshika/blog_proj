@@ -35,6 +35,7 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
     }
 }));
 
+
 function validateUser(blog){
     const schema = {
         title: Joi.string().min(3).max(20).required(),

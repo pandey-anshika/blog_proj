@@ -1,8 +1,10 @@
 const {Blogs, validate} = require('../models/blogs'); 
+const auth = require('../mw/auth');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const {User}= require('../models/user');
+const jwt = require('json-web-token');
 
 router.get('/', async (req, res) => {
   const blogs = await Blogs.find().sort( {createdAt : 1} ).select({title:1});
@@ -79,10 +81,10 @@ router.post('/', async (req, res) => {
    } catch (err) {
       return res.status(500).send(err.message);
    }
-    
+  
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id',auth, async (req, res) => {
   const error = [];
   const {title, desc}= req.body;
   if (!title){
@@ -113,7 +115,7 @@ if (error.length){
     }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',auth, async (req, res) => {
   const id = new mongoose.Types.ObjectId(req.params.id) ;
   const blog = await Blogs.findOneAndDelete({_id: id});
   

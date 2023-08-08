@@ -50,12 +50,6 @@ function validateUser(user) {
 
   return Joi.valid(user, schema);
 }
-function createPaToken(){
-  const resetToken = crypto.randomBytes(32, this.toString('hex'));
-  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  console.log(resetToken, this.passwordResetToken); 
-  return resetToken;
-}
+
 exports.User = User; 
 exports.validate = validateUser;
-exports.createToken = createPaToken;

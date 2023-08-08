@@ -5,7 +5,8 @@ const Joi = require('joi');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const jwt = require('json-web-token');
+const jwt = require('jsonwebtoken');
+const _ = require('lodash');
 const auth = require('../mw/auth');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -13,6 +14,7 @@ const randomstring = require('randomstring');
 const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
+const {tokenSchema, validateToken} = require('../models/token'); 
 
 const sendPasswordMail = async(name, email ,token)=>{
     try {
@@ -76,7 +78,8 @@ router.post('/', async(req,res)=>{
             if (!tag){
                 error.push({error:'tag missing', errorType: 'validation'})
             }
-        }}
+        }
+    }
     console.log("error:: ",error)
     if (error.length){
         return res.status(400).send(error)
@@ -92,6 +95,7 @@ router.post('/', async(req,res)=>{
        console.log(err);
        return res.status(500).send('Something went wrong')
     }
+    
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = bcrypt.hashSync(password, salt);
@@ -100,11 +104,13 @@ router.post('/', async(req,res)=>{
        password: hashPassword,
        emailId,
        mobileNo,
-       bio
+       bio,
+       Tags
     });
 
     try {
       const newUser =  await user.save();
+      
       return res.status(201).send(newUser);
 
     } catch (err) {
@@ -118,20 +124,26 @@ router.post('/login',async(req,res)=>{
     if(emailId == "" || password==""){
         res.json({message: "Empty credentials"});
     }else{
-        User.findOne({emailId: req.body.emailId})
+        await User.findOne({emailId: req.body.emailId})
         .then(data => {
-            if(data.length){
-                const hashPassword = data[0].password;
-                bcrypt.compare(password, hashPassword).then(result =>{
+            if(Object.keys(data).length){
+                const hashPassword = data.password;
+                bcrypt.compare(password, hashPassword).then(async(result) =>{
                     if(result){
-                        res.json({message: "login successful"});
+                        var tokenAuth = jwt.sign({_id: data._id, Date:new Date()},'jwtPrivateKey');
+                        res.json({message: "login successful", key:tokenAuth});
+                        const t = new tokenSchema({
+                            emailID: data._id,
+                            token: tokenAuth
+                         });
+                       await t.save();
                     }else{
                         res.json({status: "Failed", message: "invalid password"});
                     }
                 })
-                .catch(err =>{
-                      res.json({message: "error occured while comparing password"});
-                })
+                // .catch(err =>{
+                //       res.json({message: "error occured while comparing password"});
+                // })
             }else{
                 res.json({message: "invalid details entered"});
             }
