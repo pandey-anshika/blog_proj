@@ -193,13 +193,14 @@ router.put('/:id', async(req,res)=>{
   });
     
   router.post('/reset-password', async (req,res,next)=>{
-    const {emailId, newPassword, confirmPassword} = req.body;
+    const {emailId,password, newPassword, confirmPassword} = req.body;
      const {token,id}=req.params;
     if(emailId){
         const user = await User.findOne({emailId: req.body.emailId});
         if(user){
             try {
-                if(newPassword & confirmPassword & id & token){
+                if(password == newPassword){
+                 if(newPassword & confirmPassword & id & token){
                     if(newPassword === confirmPassword){
                         const key = user._id + `secertkey`; 
                         const isValid = await jwt.verify(token, key);
@@ -222,10 +223,12 @@ router.put('/:id', async(req,res)=>{
                     }else{
                         return res.status(400).json({message: "both the password does'nt match"});
                     }
-                }     
+                } 
+            }    
             } catch (error) {
                 return res.status(400).json({message: error.message});
-            }
+            
+        }
         }
     }else{
         return res.status(400).send('provide valid email')
