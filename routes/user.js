@@ -199,7 +199,7 @@ router.put('/:id', async(req,res)=>{
         const user = await User.findOne({emailId: req.body.emailId});
         if(user){
             try {
-                if(password == newPassword){
+                if(!password == newPassword){
                  if(newPassword & confirmPassword & id & token){
                     if(newPassword === confirmPassword){
                         const key = user._id + `secertkey`; 
@@ -224,6 +224,8 @@ router.put('/:id', async(req,res)=>{
                         return res.status(400).json({message: "both the password does'nt match"});
                     }
                 } 
+            }else{
+                return res.status(400).json({message: " give different password"});
             }    
             } catch (error) {
                 return res.status(400).json({message: error.message});
