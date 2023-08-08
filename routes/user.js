@@ -74,6 +74,8 @@ router.post('/', async(req,res)=>{
        bio,
        Tags
     });
+    const token = jwt.sign({user_id: user._id, emailId},'jwtPrivateKey');
+    user.token = token;
 
     try {
       const newUser =  await user.save();
@@ -91,35 +93,45 @@ router.post('/login',async(req,res)=>{
     if(emailId == "" || password==""){
         res.json({message: "Empty credentials"});
     }else{
-        await User.findOne({emailId: req.body.emailId})
-        .then(data => {
-            if(Object.keys(data).length){
-                const hashPassword = data.password;
-                bcrypt.compare(password, hashPassword).then(async(result) =>{
-                    if(result){
-                        var tokenAuth = jwt.sign({_id: data._id, Date:new Date()},'jwtPrivateKey');
-                        res.json({message: "login successful", key:tokenAuth});
-                        const t = new tokenSchema({
-                            emailID: data._id,
-                            token: tokenAuth
-                         });
-                       await t.save();
-                    }else{
-                        res.json({status: "Failed", message: "invalid password"});
-                    }
-                })
-                .catch(err =>{
-                      res.json({message: "error occured while comparing password"});
-                })
-            }else{
-                res.json({message: "invalid details entered"});
-            }
-        })
-        .catch(err => {
-            res.json({status: "failed", message: "error while checking for existing user"});
-        })
+        const user = await User.findOne({emailId: req.body.emailId});
+        if(user&&(await bcrypt.compare(password, user.password))){
+         const token =  jwt.sign({user_id: user._id, emailId},'jwtPrivateKey');
+         user.token = token;  
+         res.json(user);
+        }
+        res.send('invalid credentials');
     }
-    });
+});
+    // }else{
+    //      const user = await User.findOne({emailId: req.body.emailId})
+    //      .then(user => {
+    //          if(Object.keys(user).length){
+    //              const hashPassword = user.password;
+    //              bcrypt.compare(password, hashPassword).then(async(result) =>{
+    //                  if(result){
+    //                      var tokenAuth = jwt.sign({_id: user._id,emailId ,Date:new Date()},'jwtPrivateKey');
+    //                      res.json({message: "login successful", key:tokenAuth});
+    //                 //     const t = new tokenSchema({
+    //                 //          emailID: user._id,
+    //                 //          token: tokenAuth
+    //                 //   });
+    //                 // await t.save();
+    //                  }else{
+    //                      res.json({status: "Failed", message: "invalid password"});
+    //                  }
+    //              })
+    //              .catch(err =>{
+    //                    res.json({message: "error occured while comparing password"});
+    //              })
+    //          }else{
+    //              res.json({message: "invalid details entered"});
+    //         }
+    //     })
+    //     .catch(err => {
+    //         res.json({status: "failed", message: "error while checking for existing user"});
+    //     })
+    // }
+    // });
 
 router.put('/:id', async(req,res)=>{
     const error = [];
@@ -153,52 +165,5 @@ router.put('/:id', async(req,res)=>{
     }
    
 });
-    
-//   router.post('/change-password', async (req,res,next)=>{
-//     const {emailId, newPassword, confirmPassword} = req.body;
-//      const {token,id}=req.params;
-//     if(emailId){
-//         const user = await User.findOne({emailId: req.body.emailId, password: req.body.password});
-//         if(user){
-//             try {
-//                 if(!password == newPassword){
-//                  if(newPassword & confirmPassword & id & token){
-//                     if(newPassword === confirmPassword){
-//                         const key = user._id + `secertkey`; 
-//                         const isValid = await jwt.verify(token, key);
-//                         if(isValid){
-//                             const userr = await User.findOneAndUpdate({_id : id});
-//                             const genSalt = await bcrypt.genSalt(10);
-//                             const hashPassword = await bcrypt.hash(newPassword, genSalt);
-//                             const isSuccess = await User.findByIdAndUpdate(userr, {
-//                                 $set:{
-//                                     password: hashPassword,                           
-//                                 },
-//                             });
-//                             if(isSuccess){
-//                                 return res.status(200).json({message: "Password changed"});
-//                             }
-//                         }
-//                         else{
-//                             return res.status(400).json({message: 'link expired'});
-//                         }
-//                     }else{
-//                         return res.status(400).json({message: "both the password does'nt match"});
-//                     }
-//                 } 
-//             }else{
-//                 return res.status(400).json({message: " give different password"});
-//             }    
-//             } catch (error) {
-//                 return res.status(400).json({message: error.message});
-            
-//         }
-//         }
-//     }else{
-//         return res.status(400).send('provide valid email')
-//     }
-    
-//   });
-        
-  
+
 module.exports = router; 

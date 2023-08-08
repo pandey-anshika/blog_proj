@@ -34,6 +34,9 @@ const User = mongoose.model('User', new mongoose.Schema({
   Tags:{
     type: Array,
     default: []
+  },
+  token: {
+    type: String
   }
 }));
 
