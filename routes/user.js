@@ -16,39 +16,6 @@ const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
 const {tokenSchema, validateToken} = require('../models/token'); 
 
-const sendPasswordMail = async(name, email ,token)=>{
-    try {
-        const transporter = nodemailer.createTransport({
-            host: 'ldksjh@gmail.com',
-            service: 'gmail',
-            port: 234,
-            secure: false,
-            requireTLS: true,
-            auth:{
-                user:config.emailId ,
-                pass:config.password
-            }
-        });
-
-        const mailOptions = {
-            from: config.emailId,
-            to: email,
-            subject: 'resetting password',
-            text: options.message
-        }
-        transporter.sendMail(mailOptions, function(error, info){
-            if(error){
-                console.log(error);
-            }
-            else{
-                console.log(info.response);
-            }
-        })
-    } catch (error) {
-        res.status(400);
-    }
-}
-
 router.get('/', async(req,res)=>{
     const user = await User.find().select('-password');
     res.status(200).send(user);
@@ -186,77 +153,52 @@ router.put('/:id', async(req,res)=>{
     }
    
 });
-//     const token = jwt.sign({_id: user_id}, {expiresIn: '15m'});
-//     return user.updateOne({forgotPassword: token}, function(err, user){
-//         if(err)    return res.status(404).json({error: "error occured"});
-
-  router.post('/forget-password', async (req, res, next) => {
-    const {emailId} = req.body;
-    if(emailId){
-        const user = await User.findOne({emailId: req.body.emailId});
-        if(user){
-            const key = user._id + "secertkey";
-            const token = jwt.sign({user: user._id},key ,{
-                expiresIn: '5m',
-            })
-            sendPasswordMail(user.name, user.emailId, token.token);
-            return res.status(200).json({message: 'message sent'});
-        }
-        else{
-            return res.send('there is no such user');
-        }
-    }
-    else{
-        return res.status(400).send('provide valid email!');
-    }
-
-  });
     
-  router.post('/reset-password', async (req,res,next)=>{
-    const {emailId,password, newPassword, confirmPassword} = req.body;
-     const {token,id}=req.params;
-    if(emailId){
-        const user = await User.findOne({emailId: req.body.emailId});
-        if(user){
-            try {
-                if(!password == newPassword){
-                 if(newPassword & confirmPassword & id & token){
-                    if(newPassword === confirmPassword){
-                        const key = user._id + `secertkey`; 
-                        const isValid = await jwt.verify(token, key);
-                        if(isValid){
-                            const userr = await User.findOneAndUpdate({_id : id});
-                            const genSalt = await bcrypt.genSalt(10);
-                            const hashPassword = await bcrypt.hash(newPassword, genSalt);
-                            const isSuccess = await User.findByIdAndUpdate(userr, {
-                                $set:{
-                                    password: hashPassword,                           
-                                },
-                            });
-                            if(isSuccess){
-                                return res.status(200).json({message: "Password changed"});
-                            }
-                        }
-                        else{
-                            return res.status(400).json({message: 'link expired'});
-                        }
-                    }else{
-                        return res.status(400).json({message: "both the password does'nt match"});
-                    }
-                } 
-            }else{
-                return res.status(400).json({message: " give different password"});
-            }    
-            } catch (error) {
-                return res.status(400).json({message: error.message});
+//   router.post('/change-password', async (req,res,next)=>{
+//     const {emailId, newPassword, confirmPassword} = req.body;
+//      const {token,id}=req.params;
+//     if(emailId){
+//         const user = await User.findOne({emailId: req.body.emailId, password: req.body.password});
+//         if(user){
+//             try {
+//                 if(!password == newPassword){
+//                  if(newPassword & confirmPassword & id & token){
+//                     if(newPassword === confirmPassword){
+//                         const key = user._id + `secertkey`; 
+//                         const isValid = await jwt.verify(token, key);
+//                         if(isValid){
+//                             const userr = await User.findOneAndUpdate({_id : id});
+//                             const genSalt = await bcrypt.genSalt(10);
+//                             const hashPassword = await bcrypt.hash(newPassword, genSalt);
+//                             const isSuccess = await User.findByIdAndUpdate(userr, {
+//                                 $set:{
+//                                     password: hashPassword,                           
+//                                 },
+//                             });
+//                             if(isSuccess){
+//                                 return res.status(200).json({message: "Password changed"});
+//                             }
+//                         }
+//                         else{
+//                             return res.status(400).json({message: 'link expired'});
+//                         }
+//                     }else{
+//                         return res.status(400).json({message: "both the password does'nt match"});
+//                     }
+//                 } 
+//             }else{
+//                 return res.status(400).json({message: " give different password"});
+//             }    
+//             } catch (error) {
+//                 return res.status(400).json({message: error.message});
             
-        }
-        }
-    }else{
-        return res.status(400).send('provide valid email')
-    }
+//         }
+//         }
+//     }else{
+//         return res.status(400).send('provide valid email')
+//     }
     
-  });
+//   });
         
   
 module.exports = router; 

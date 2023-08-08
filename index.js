@@ -9,6 +9,7 @@ const blogs = require('./routes/blogs');
 const user = require('./routes/user');
 const auth = require('./mw/auth')
 const {mw} = require('./mw/middleware');
+const forgotPass = require('./routes/forgotPass');
 
 if(!config.get('jwtPrivateKey')){
   console.error('fatal error');
@@ -24,6 +25,7 @@ app.use('/api/blogs',blogs);
 app.use('/api/user',user);
 app.use(mw);
 app.use('/api/auth',auth);
+app.use('/api',forgotPass);
 
 
 var storage = multer.diskStorage({
