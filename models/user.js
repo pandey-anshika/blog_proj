@@ -37,7 +37,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 // User.methods.generateToken = function(){
 //   return new Promise((res,req)=>{
-//     jwt.sign({_id: user._id.toString()}, jwtSecret,(err,token)=>{
+//     jwt.sign({_id: user._id.toString()}, config.get('jwtPrivateKey'),(err,token)=>{
 //       if(err){
 //         return res.status(500).send({
 //           message: 'Internal server error'
@@ -48,7 +48,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 //   }
 // });
 // });
-//},
+// }
 
 function validateUser(user) {
   const schema = {

@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
   res.send(blogs);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth,async (req, res) => {
   const error = [];
   const {title, desc, shortDes, createdBy, Tags}= req.body;
   if (!title){

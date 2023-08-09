@@ -1,7 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const {User} = require('../models/user')
+const {User} = require('../models/user');
 const nodemailer = require('nodemailer');
+const randomstring = require('randomstring');
 const router = express.Router();
 
 const app = express();

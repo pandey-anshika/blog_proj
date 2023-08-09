@@ -8,8 +8,6 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const auth = require('../mw/auth');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const randomstring = require('randomstring');
 const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
@@ -142,11 +140,10 @@ router.put('/:id',auth, async(req,res)=>{
             bio,
             name
         },{new:true});
-        console.log(user,"user");
         if(!user){
             return res.status(500).send('something is missing');
         }
-        return res.status(200).send(user);
+        return res.status(200).send("details updated");
 
     } catch (error) {
         return console.log(error.message);
