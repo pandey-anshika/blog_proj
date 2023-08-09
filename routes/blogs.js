@@ -136,7 +136,7 @@ router.delete('/:id',auth, async (req, res) => {
   
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id',auth, async (req, res) => {
   const blog = await Blogs.findById(req.params.id);
 
   if (!blog) return res.status(404).send('The blog was not found.');
