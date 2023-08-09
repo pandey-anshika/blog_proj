@@ -7,10 +7,47 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const auth = require('../mw/auth');
+const nodemailer = require('nodemailer');
+const randomstring = require('randomstring');
 const crypto = require('crypto');
 const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
+
+const sendPasswordMail = async(name, emailId ,token)=>{
+    try {
+        const transporter = nodemailer.createTransport({
+            host: 'ldksjh@gmail.com',
+            service: 'gmail',
+            port: 234,
+            secure: false,
+            requireTLS: true,
+            auth:{
+                user:config.emailId ,
+                pass:config.password
+            }
+        });
+
+        const mailOptions = {
+            from: config.emailId,
+            to: emailId,
+            subject: 'resetting password',
+            text: `
+            To reset your password, click the following link
+          `
+        }
+        transporter.sendMail(mailOptions, function(error, info){
+            if(error){
+                console.log(error);
+            }
+            else{
+                console.log(info.response);
+            }
+        })
+    } catch (error) {
+        res.status(400);
+    }
+}
 
 router.get('/', async(req,res)=>{
     const user = await User.find().select('-password');
@@ -151,4 +188,49 @@ router.put('/:id',auth, async(req,res)=>{
    
 });
 
+// router.post('/forget-password', (req, res) => {
+//     const { emailId } = req.body;
+  
+//     // const user = User.findOne({ email });
+//     // if (!user) {
+//     //   return res.status(404).send('User not found');
+//     // }
+//     // const token = bcrypt.hashSync(Math.random().toString(36), 10);
+//     // user.passwordResetToken = token;
+//     // user.save();
+  
+//     // sendPasswordMail.send(user.name, user.emailId, token.token);
+  
+//     // res.status(200).send('Password reset email sent');
+//     const user =  User.findOne({ emailId });
+//   if (!user) throw new Error("User does not exist");
+//   let resetToken = crypto.randomBytes(32).toString("hex");
+//   const salt = bcrypt.genSalt(10)
+//   const hash = bcrypt.hash(resetToken, salt);
+
+//   const userr =  new User({
+//     token: hash
+//   }).save();
+//   sendPasswordMail.send(user.emailId, token.token);
+  
+//   res.status(200).send('Password reset email sent');
+//   });
+  
+//   router.post('/reset-password', (req, res) => {
+//     const { token, password } = req.body;
+  
+//     const user = User.findOne({ passwordResetToken: token });
+//     if (!user) {
+//       res.status(400).send('Invalid token');
+//       return;
+//     }
+  
+//     const hashedPassword = bcrypt.hashSync(password, 10);
+  
+//     user.password = hashedPassword;
+//     user.passwordResetToken = null;
+//     user.save();
+  
+//     res.status(200).send('Password reset successful');
+//   });
 module.exports = router; 
