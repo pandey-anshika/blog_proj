@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const {User}= require('../models/user');
-const jwt = require('json-web-token');
+const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
   const blogs = await Blogs.find().sort( {createdAt : 1} ).select({title:1});

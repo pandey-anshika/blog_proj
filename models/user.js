@@ -39,8 +39,6 @@ const User = mongoose.model('User', new mongoose.Schema({
     type: String
   }
 }));
-
-
 function validateUser(user) {
   const schema = {
     name: Joi.string().min(5).max(50).required(),

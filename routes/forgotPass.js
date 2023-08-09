@@ -22,7 +22,7 @@ const sendPasswordMail = async(name, emailId ,token)=>{
 
         const mailOptions = {
             from: config.emailId,
-            to: email,
+            to: emailId,
             subject: 'resetting password',
             text: `
             To reset your password, click the following link
