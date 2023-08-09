@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const error = [];
-  const {title, desc, shortDes, createdBy, tags}= req.body;
+  const {title, desc, shortDes, createdBy, Tags}= req.body;
   if (!title){
       error.push({error:'title missing', errorType: 'validation'})
   }
@@ -37,19 +37,28 @@ router.post('/', async (req, res) => {
       error.push({error:'user not found', errorType: 'validation'})
     }
   }
-  if(tags){
-    let tags = null ;
-    try{
-      tags = await User.findOne({Tags:tags});
+  if(Tags){
+    const tags = Tags.split(',');
+    for (let i = 0; i < tags.length; i++) {
+        const tag = tags[i].trim();
+        if (!tag){
+            error.push({error:'tag missing', errorType: 'validation'})
+        }
     }
-    catch(err){
-      console.log(err);
-      return res.status(500).send('something went wrong');
-    }
-    if(!tags){
-      error.push({error:'tags not found', errorType: 'validation'})
-    }
-  }
+}
+  // if(tags){
+  //   let tags = null ;
+  //   try{
+  //     tags = await User.findOne({Tags:tags});
+  //   }
+  //   catch(err){
+  //     console.log(err);
+  //     return res.status(500).send('something went wrong');
+  //   }
+  //   if(!tags){
+  //     error.push({error:'tags not found', errorType: 'validation'})
+  //   }
+  // }
 
   console.log("error:: ",error)
   if (error.length){
@@ -73,7 +82,8 @@ router.post('/', async (req, res) => {
         shortDes,
         createdAt: req.body.createdAt,
         createdBy,
-        updatedAt: req.body.updatedAt
+        updatedAt: req.body.updatedAt,
+        Tags
     });
     try {
       const newBlog = await blog.save();

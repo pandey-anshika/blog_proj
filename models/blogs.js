@@ -29,10 +29,10 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
         type: Date,
         default: Date.now
     },
-    tags: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }
+    Tags:{
+        type: Array,
+        default: []
+      },
 }));
 
 
@@ -44,7 +44,7 @@ function validateUser(blog){
         createdBy: Joi.string(),
         createdAt: Joi.number(),
         updatedAt: Joi.number(),
-        tags: Joi.string()
+        Tags: Joi.array().items(Joi.string().min(3).max(100)),
     };
     return Joi.valid(blog, schema);
 

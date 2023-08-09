@@ -31,26 +31,38 @@ const User = mongoose.model('User', new mongoose.Schema({
     maxlength: 100
   },
   passwordResetToken: String,
-  Tags:{
-    type: Array,
-    default: []
-  },
   token: {
     type: String
   }
 }));
+
+// User.methods.generateToken = function(){
+//   return new Promise((res,req)=>{
+//     jwt.sign({_id: user._id.toString()}, jwtSecret,(err,token)=>{
+//       if(err){
+//         return res.status(500).send({
+//           message: 'Internal server error'
+//         })
+//       }
+//   else{
+//     res.send();
+//   }
+// });
+// });
+//},
+
 function validateUser(user) {
   const schema = {
     name: Joi.string().min(5).max(50).required(),
     password: Joi.string().min(8).max(20).required(),
     emailId: Joi.string().required().email(),
     bio: Joi.string().min(3).max(100),
-    mobileNo: Joi.number().required(),
-    Tags: Joi.array().items(Joi.string().min(3).max(100))
+    mobileNo: Joi.number().required()
   };
 
   return Joi.valid(user, schema);
 }
+
 
 exports.User = User; 
 exports.validate = validateUser;

@@ -11,6 +11,7 @@ module.exports = function (req, res, next) {
 //   } catch (err) {
 //     res.status(400).send(err);
 // }
+console.log(token);
 const bearerToken = token.split(' ');
 console.log(bearerToken);
   if (!bearerToken) return res.status(401).send('Accesss denied. No token provided.');
