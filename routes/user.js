@@ -1,6 +1,5 @@
-const {User, validate, createToken} = require('../models/user');
+const {User, validateUser} = require('../models/user');
 const mongoose = require('mongoose');
-const Token = require('../models/token');
 const Joi = require('joi');
 const express = require('express');
 const router = express.Router();

@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const mongoose = require('mongoose');
 const config = require('config');
-const jwt = require('json-web-token');
+const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const User = mongoose.model('User', new mongoose.Schema({
@@ -30,7 +30,6 @@ const User = mongoose.model('User', new mongoose.Schema({
     minlength: 3,
     maxlength: 100
   },
-  passwordResetToken: String,
   token: {
     type: String
   }
@@ -63,6 +62,5 @@ function validateUser(user) {
   return Joi.valid(user, schema);
 }
 
-
 exports.User = User; 
-exports.validate = validateUser;
+exports.validateUser = validateUser;
