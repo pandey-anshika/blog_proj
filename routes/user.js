@@ -125,36 +125,6 @@ router.post('/login',async(req,res)=>{
         res.send('invalid credentials');
     }
 });
-    // }else{
-    //      const user = await User.findOne({emailId: req.body.emailId})
-    //      .then(user => {
-    //          if(Object.keys(user).length){
-    //              const hashPassword = user.password;
-    //              bcrypt.compare(password, hashPassword).then(async(result) =>{
-    //                  if(result){
-    //                      var tokenAuth = jwt.sign({_id: user._id,emailId ,Date:new Date()},'jwtPrivateKey');
-    //                      res.json({message: "login successful", key:tokenAuth});
-    //                 //     const t = new tokenSchema({
-    //                 //          emailID: user._id,
-    //                 //          token: tokenAuth
-    //                 //   });
-    //                 // await t.save();
-    //                  }else{
-    //                      res.json({status: "Failed", message: "invalid password"});
-    //                  }
-    //              })
-    //              .catch(err =>{
-    //                    res.json({message: "error occured while comparing password"});
-    //              })
-    //          }else{
-    //              res.json({message: "invalid details entered"});
-    //         }
-    //     })
-    //     .catch(err => {
-    //         res.json({status: "failed", message: "error while checking for existing user"});
-    //     })
-    // }
-    // });
 
 router.put('/:id',auth, async(req,res)=>{
     const error = [];
