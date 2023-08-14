@@ -23,6 +23,8 @@ app.use(express.json());
 app.use('/api/blogs',blogs);
 app.use('/api/user',user);
 app.use(mw);
+app.use(express.urlencoded({extended: false}));
+app.set('view engine', 'ejs');
 
 
 var storage = multer.diskStorage({

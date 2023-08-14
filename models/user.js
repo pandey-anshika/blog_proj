@@ -30,7 +30,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     minlength: 3,
     maxlength: 100
   },
-  passwordResetToken: String,
+  passwordResetToken: {type:String},
   token: {
     type: String
   }

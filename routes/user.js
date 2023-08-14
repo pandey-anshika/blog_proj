@@ -17,8 +17,9 @@ const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
 const { decrypt } = require('dotenv');
+const { accessSync } = require('fs');
 
-const sendPasswordMail = async(name, emailId ,token)=>{
+const sendPasswordMail = async(emailId ,token)=>{
     try {
         const transporter = nodemailer.createTransport({
             host: 'ldksjh@gmail.com',
@@ -129,36 +130,6 @@ router.post('/login',async(req,res)=>{
         res.send('invalid credentials');
     }
 });
-    // }else{
-    //      const user = await User.findOne({emailId: req.body.emailId})
-    //      .then(user => {
-    //          if(Object.keys(user).length){
-    //              const hashPassword = user.password;
-    //              bcrypt.compare(password, hashPassword).then(async(result) =>{
-    //                  if(result){
-    //                      var tokenAuth = jwt.sign({_id: user._id,emailId ,Date:new Date()},'jwtPrivateKey');
-    //                      res.json({message: "login successful", key:tokenAuth});
-    //                 //     const t = new tokenSchema({
-    //                 //          emailID: user._id,
-    //                 //          token: tokenAuth
-    //                 //   });
-    //                 // await t.save();
-    //                  }else{
-    //                      res.json({status: "Failed", message: "invalid password"});
-    //                  }
-    //              })
-    //              .catch(err =>{
-    //                    res.json({message: "error occured while comparing password"});
-    //              })
-    //          }else{
-    //              res.json({message: "invalid details entered"});
-    //         }
-    //     })
-    //     .catch(err => {
-    //         res.json({status: "failed", message: "error while checking for existing user"});
-    //     })
-    // }
-    // });
 
 router.put('/:id',auth, async(req,res)=>{
     const error = [];
@@ -221,28 +192,72 @@ router.get('/sheet',auth, async(req,res)=>{
     }
 
 })
-router.post('/forget-password', (req, res) => {
-    const { emailId } = req.body;
+
+router.post('/forget-password',auth, async(req, res) => {
+    const {emailId} = req.User;
+    console.log("emailId:: ",emailId)
     if (emailId) {
-        const user =  User.findOne({ emailId });
-           if (!user) {
+        const user =  User.findOne({ emailId: emailId });
+           if (user) {
             let resetToken = crypto.randomBytes(32).toString("hex");
-               const salt = bcrypt.genSalt(10)
-               const hash = bcrypt.hash(resetToken, salt);
-               user.resetPasswordToken = hash;
-               user.save();
-               sendPasswordMail.send(user.emailId, user.name, user.resetPasswordToken);
-               res.status(200).send('Password reset email sent');
+               const salt = bcrypt.genSalt(10);
+               const newHashToken = await bcrypt.hash(resetToken, Number(salt));
+            const isToken = await User.updateOne({emailId: emailId},{passwordResetToken:newHashToken});
+            if(isToken){
+                return res.status(200).json({message: "Token set"});
            }
-           else{
-               return res.status(400).send({ error: "User not found" });    
-  }
+            else{
+                 return res.status(500).send('token notset or not available');
+          }
+        }
+               sendPasswordMail.send(user.emailId, user.passwordResetToken);
+               res.status(200).send('Password reset email sent');
     }
+
     else{
         return res.status(400).send({ error: "emailId missing" });
  } 
-});
-  
+   }); 
+   
+router.get('/forget-password-link',(req,res,next)=>{
+    res.render('forget-password');
+})
+
+router.post('/forget-password-link',auth,async(req,res,next)=>{
+    const {emailId} = req.User;
+    if(!emailId){
+       return  res.send('wrong email id provided');
+    }
+    else{
+        const user = await  User.findOne({ emailId: emailId });
+        if(user){
+            const payload={
+                emailId: user.emailId,
+                user_id: user._id
+            };
+            const token = jwt.sign(payload, 'jwtPrivateKey',{expiresIn:'15m'});
+            const link = `http://localhost:3000/api/user/reset-password-link/${token}`;
+            console.log(link);
+            res.send('password reset link has been sent');
+        }
+        else{
+            return res.send('User not registered');
+        }
+    }
+
+})
+
+router.get('/reset-password-link/:token',auth, async(req,res,next)=>{
+    const {token} = req.params;
+    // res.send(token);
+    const payload = jwt.verify(token, 'jwtPrivateKey');
+    res.render('reset-password');
+ })
+
+router.post('/reset-password-link/:token', (req,res,next)=>{
+    const {token} = req.params;
+    res.send(user);
+})
 
 router.post('/reset-password', auth,async (req,res,next)=>{
     const {emailId} = req.User;
