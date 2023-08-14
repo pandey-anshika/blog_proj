@@ -17,7 +17,6 @@ const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
 const { decrypt } = require('dotenv');
-const { accessSync } = require('fs');
 
 const sendPasswordMail = async(emailId ,token)=>{
     try {
@@ -229,14 +228,14 @@ router.post('/forget-password-link',auth,async(req,res,next)=>{
        return  res.send('wrong email id provided');
     }
     else{
-        const user = await  User.findOne({ emailId: emailId });
+        const user =await  User.findOne({ emailId: emailId });
         if(user){
             const payload={
                 emailId: user.emailId,
                 user_id: user._id
             };
-            const token = jwt.sign(payload, 'jwtPrivateKey',{expiresIn:'15m'});
-            const link = `http://localhost:3000/api/user/reset-password-link/${token}`;
+            const token = jwt.sign(payload,'jwtPrivateKey',{expiresIn:'15m'});
+            const link = `http://localhost:3000/api/user/reset-password-link/${user._id}/${token}`;
             console.log(link);
             res.send('password reset link has been sent');
         }
@@ -247,15 +246,14 @@ router.post('/forget-password-link',auth,async(req,res,next)=>{
 
 })
 
-router.get('/reset-password-link/:token',auth, async(req,res,next)=>{
-    const {token} = req.params;
-    // res.send(token);
+router.get('/reset-password-link/:id/:token', (req,res,next)=>{
+    const {id,token} = req.params;
     const payload = jwt.verify(token, 'jwtPrivateKey');
     res.render('reset-password');
- })
+})
 
-router.post('/reset-password-link/:token', (req,res,next)=>{
-    const {token} = req.params;
+router.post('/reset-password-link/:id/:token', (req,res,next)=>{
+    const {token,id} = req.params;
     res.send(user);
 })
 
