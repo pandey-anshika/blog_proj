@@ -259,9 +259,12 @@ router.post('/reset-password', auth,async (req,res,next)=>{
                 const genSalt = await bcrypt.genSalt(10);
                 const newhashPassword = await bcrypt.hash(newPassword, genSalt);
 
+                console.log(comparePassword)
+                console.log(user.password)
+                console.log(newhashPassword)
                 try {
-                    if(user.password == newhashPassword){
-                            const isSuccess = await User.updateOne({}, {
+                    if(user.password !== newhashPassword){
+                            const isSuccess = await User.updateOne({emailId:emailId}, {
                                 $set:{
                                     password: newhashPassword,                           
                                 }
@@ -270,7 +273,7 @@ router.post('/reset-password', auth,async (req,res,next)=>{
                                 return res.status(200).json({message: "Password changed"});
                            }
                             else{
-                                 return res.status(400).send('password not change');
+                                 return res.status(500).send('password not change');
                           }
                         }
                         else{
