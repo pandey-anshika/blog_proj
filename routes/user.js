@@ -3,8 +3,11 @@ const mongoose = require('mongoose');
 const Joi = require('joi');
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const ExcelJs = require('exceljs');
+const moment = require('moment');
 const _ = require('lodash');
 const auth = require('../mw/auth');
 const nodemailer = require('nodemailer');
@@ -13,6 +16,7 @@ const crypto = require('crypto');
 const { config } = require('process');
 const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
+const { decrypt } = require('dotenv');
 
 const sendPasswordMail = async(name, emailId ,token)=>{
     try {
@@ -188,49 +192,101 @@ router.put('/:id',auth, async(req,res)=>{
    
 });
 
-// router.post('/forget-password', (req, res) => {
-//     const { emailId } = req.body;
-  
-//     // const user = User.findOne({ email });
-//     // if (!user) {
-//     //   return res.status(404).send('User not found');
-//     // }
-//     // const token = bcrypt.hashSync(Math.random().toString(36), 10);
-//     // user.passwordResetToken = token;
-//     // user.save();
-  
-//     // sendPasswordMail.send(user.name, user.emailId, token.token);
-  
-//     // res.status(200).send('Password reset email sent');
-//     const user =  User.findOne({ emailId });
-//   if (!user) throw new Error("User does not exist");
-//   let resetToken = crypto.randomBytes(32).toString("hex");
-//   const salt = bcrypt.genSalt(10)
-//   const hash = bcrypt.hash(resetToken, salt);
+router.get('/sheet',auth, async(req,res)=>{
+    try {
+        const user = await User.find();
+        const workbook = new ExcelJs.Workbook();
+        const worksheet = workbook.addWorksheet('My User');
+        worksheet.columns = [
+            { header: 'S.no', key: 's_no' },
+            { header: 'Name', key: 'name' },
+            { header: 'Email Id', key: 'emailId' },
+            { header: 'Mobile No', key:'mobileNo' },
+            { header: 'Bio', key: 'bio' }
+            ];
+            let count = 1;
+            user.forEach(users=>{
+                users.s_no = count;
+                worksheet.addRow(users);
+                count +=1
+            });
+            worksheet.getRow(1).eachCell((cell)=>{
+                cell.font = {bold:true};
+            });
+            const data = await workbook.xlsx.writeFile('users.xlsx').then((data)=>{
+                res.send('done');
+            })
+    } catch (error) {
+        res.status(500).send(error);
+    }
 
-//   const userr =  new User({
-//     token: hash
-//   }).save();
-//   sendPasswordMail.send(user.emailId, token.token);
+})
+router.post('/forget-password', (req, res) => {
+    const { emailId } = req.body;
+    if (emailId) {
+        const user =  User.findOne({ emailId });
+           if (!user) {
+            let resetToken = crypto.randomBytes(32).toString("hex");
+               const salt = bcrypt.genSalt(10)
+               const hash = bcrypt.hash(resetToken, salt);
+               user.resetPasswordToken = hash;
+               user.save();
+               sendPasswordMail.send(user.emailId, user.name, user.resetPasswordToken);
+               res.status(200).send('Password reset email sent');
+           }
+           else{
+               return res.status(400).send({ error: "User not found" });    
+  }
+    }
+    else{
+        return res.status(400).send({ error: "emailId missing" });
+ } 
+});
   
-//   res.status(200).send('Password reset email sent');
-//   });
-  
-//   router.post('/reset-password', (req, res) => {
-//     const { token, password } = req.body;
-  
-//     const user = User.findOne({ passwordResetToken: token });
-//     if (!user) {
-//       res.status(400).send('Invalid token');
-//       return;
-//     }
-  
-//     const hashedPassword = bcrypt.hashSync(password, 10);
-  
-//     user.password = hashedPassword;
-//     user.passwordResetToken = null;
-//     user.save();
-  
-//     res.status(200).send('Password reset successful');
-//   });
+
+router.post('/reset-password', auth,async (req,res,next)=>{
+    const {emailId} = req.User;
+        const { password, newPassword} = req.body;
+        if(emailId ){
+            const user = await User.findOne({emailId:emailId});
+            console.log(user.password)
+            if(user){     
+                const comparePassword =await bcrypt.compare(password, user.password);
+                if(!comparePassword){
+                    return res.status(400).send({error:"Wrong old password"})
+                }
+
+                const genSalt = await bcrypt.genSalt(10);
+                const newhashPassword = await bcrypt.hash(newPassword, genSalt);
+
+                console.log(comparePassword)
+                console.log(user.password)
+                console.log(newhashPassword)
+                try {
+                    if(user.password !== newhashPassword){
+                            const isSuccess = await User.updateOne({emailId:emailId}, {
+                                $set:{
+                                    password: newhashPassword,                           
+                                }
+                            });
+                            if(isSuccess){
+                                return res.status(200).json({message: "Password changed"});
+                           }
+                            else{
+                                 return res.status(500).send('password not change');
+                          }
+                        }
+                        else{
+                            return res.status(400).send('old password and new password cannot be same');
+                        }
+                     }
+              
+                catch (error) {
+                    return res.status(400).json({message: error.message});
+            }
+        }else{
+            return res.status(400).send('provide valid email or password');
+        }
+    }
+      });
 module.exports = router; 
