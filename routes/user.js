@@ -18,41 +18,6 @@ const { options } = require('joi');
 const {Blogs} = require('../models/blogs'); 
 const { decrypt } = require('dotenv');
 
-const sendPasswordMail = async(emailId ,token)=>{
-    try {
-        const transporter = nodemailer.createTransport({
-            host: 'ldksjh@gmail.com',
-            service: 'gmail',
-            port: 234,
-            secure: false,
-            requireTLS: true,
-            auth:{
-                user:config.emailId ,
-                pass:config.password
-            }
-        });
-
-        const mailOptions = {
-            from: config.emailId,
-            to: emailId,
-            subject: 'resetting password',
-            text: `
-            To reset your password, click the following link
-          `
-        }
-        transporter.sendMail(mailOptions, function(error, info){
-            if(error){
-                console.log(error);
-            }
-            else{
-                console.log(info.response);
-            }
-        })
-    } catch (error) {
-        res.status(400);
-    }
-}
-
 router.get('/', async(req,res)=>{
     const user = await User.find().select('-password');
     res.status(200).send(user);
@@ -118,15 +83,15 @@ router.post('/', async(req,res)=>{
 router.post('/login',async(req,res)=>{
     const { emailId, password} = req.body;
     if(emailId == "" || password==""){
-        res.json({message: "Empty credentials"});
+        return res.status(200).send({message: "Empty credentials"});
     }else{
         const user = await User.findOne({emailId: req.body.emailId});
         if(user&&(await bcrypt.compare(password, user.password))){
          const token =  jwt.sign({user_id: user._id, emailId},'jwtPrivateKey');
          user.token = token;  
-         res.json(user);
+         return res.status(200).send(user);
         }
-        res.send('invalid credentials');
+        return res.status(400).send('invalid credentials');
     }
 });
 
@@ -218,16 +183,27 @@ router.post('/forget-password',auth, async(req, res) => {
  } 
    }); 
    
-router.get('/forget-password-link',(req,res,next)=>{
-    res.render('forget-password');
+router.get('/forget-password-link',async(req,res,next)=>{
+    const {emailId} = req.body;
+    try{
+        const user =await  User.findOne({ emailId: emailId });
+        if(user){
+            const payload={
+                emailId: user.emailId,
+                user_id: user._id
+            };
+        const token = jwt.sign(payload,'jwtPrivateKey',{expiresIn:'5m'});
+        res.render('forget-password');
+    }
+}catch(error){
+        return res.status(400).send(error.message);
+    } 
+    
 })
 
-router.post('/forget-password-link',auth,async(req,res,next)=>{
-    const {emailId} = req.User;
-    if(!emailId){
-       return  res.send('wrong email id provided');
-    }
-    else{
+router.post('/forget-password-link',async(req,res,next)=>{
+    const {emailId} = req.body;
+    
         const user =await  User.findOne({ emailId: emailId });
         if(user){
             const payload={
@@ -235,26 +211,81 @@ router.post('/forget-password-link',auth,async(req,res,next)=>{
                 user_id: user._id
             };
             const token = jwt.sign(payload,'jwtPrivateKey',{expiresIn:'15m'});
+            try{
+                const user = await User.updateOne({emailId: payload.emailId},{
+                        $set:{
+                            passwordResetToken: token
+                        }    
+                });
+            }catch(e){
+                return res.status(400).send(e.message);
+            }
             const link = `http://localhost:3000/api/user/reset-password-link/${user._id}/${token}`;
             console.log(link);
             res.send('password reset link has been sent');
         }
         else{
-            return res.send('User not registered');
+            return res.status(400).send('User not registered');
         }
-    }
+    
 
 })
 
-router.get('/reset-password-link/:id/:token', (req,res,next)=>{
+router.get('/reset-password-link/:id/:token', async(req,res,next)=>{
     const {id,token} = req.params;
-    const payload = jwt.verify(token, 'jwtPrivateKey');
-    res.render('reset-password');
+   
+    const user = await User.findOne({_id: id});
+    console.log("users::",user)
+     if(user.passwordResetToken){
+        const payload = jwt.verify(token, 'jwtPrivateKey',(err, decoded) => {
+            if(err){
+              res.send(err.message)
+            }else{
+                res.render('reset-password');
+            }
+          });
+            }else{
+                res.send('token doesnt exists');
+                
+            }
 })
 
-router.post('/reset-password-link/:id/:token', (req,res,next)=>{
+router.post('/reset-password-link/:id/:token',async (req,res,next)=>{
+    
     const {token,id} = req.params;
-    res.send(user);
+    const {newPassword,confirmPassword} = req.body;
+
+    const user = await User.findOne({_id: id});
+    if(user.passwordResetToken){
+        const payload = jwt.verify(token, 'jwtPrivateKey');
+    
+            if(newPassword == confirmPassword){
+                const genSalt = await bcrypt.genSalt(10);
+                const newHashPassword = await bcrypt.hash(confirmPassword, genSalt);
+
+                try {
+                    const updatedUser = await User.updateOne({emailId: payload.emailId},{
+                        $unset:{
+                            passwordResetToken:''
+                        },
+                            $set:{
+                                password: newHashPassword
+                            }    
+                    },{new: true});
+                    return res.status(200).send(updatedUser);
+            } catch (error) {
+                return res.status(400).send('not updated');
+            }
+            }
+            else{
+                return res.status(400).send('passwords do not match');
+                }
+    }else{
+        res.send('token doesnt exists');
+        
+    }
+    
+            
 })
 
 router.post('/reset-password', auth,async (req,res,next)=>{
@@ -265,6 +296,7 @@ router.post('/reset-password', auth,async (req,res,next)=>{
             console.log(user.password)
             if(user){     
                 const comparePassword =await bcrypt.compare(password, user.password);
+                console.log(comparePassword)
                 if(!comparePassword){
                     return res.status(400).send({error:"Wrong old password"})
                 }
@@ -272,9 +304,9 @@ router.post('/reset-password', auth,async (req,res,next)=>{
                 const genSalt = await bcrypt.genSalt(10);
                 const newhashPassword = await bcrypt.hash(newPassword, genSalt);
 
-                console.log(comparePassword)
-                console.log(user.password)
                 console.log(newhashPassword)
+                console.log(user.password)
+                console.log("user.password !== newhashPassword",user.password !== newhashPassword)
                 try {
                     if(user.password !== newhashPassword){
                             const isSuccess = await User.updateOne({emailId:emailId}, {

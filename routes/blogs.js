@@ -38,7 +38,7 @@ router.post('/', auth,async (req, res) => {
     }
   }
   if(Tags){
-    const tags = Tags.split(',');
+    let tags = Tags.toString().split(',');
     for (let i = 0; i < tags.length; i++) {
         const tag = tags[i].trim();
         if (!tag){
@@ -46,19 +46,6 @@ router.post('/', auth,async (req, res) => {
         }
     }
 }
-  // if(tags){
-  //   let tags = null ;
-  //   try{
-  //     tags = await User.findOne({Tags:tags});
-  //   }
-  //   catch(err){
-  //     console.log(err);
-  //     return res.status(500).send('something went wrong');
-  //   }
-  //   if(!tags){
-  //     error.push({error:'tags not found', errorType: 'validation'})
-  //   }
-  // }
 
   console.log("error:: ",error)
   if (error.length){

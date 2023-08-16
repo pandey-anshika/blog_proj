@@ -30,26 +30,13 @@ const User = mongoose.model('User', new mongoose.Schema({
     minlength: 3,
     maxlength: 100
   },
-  passwordResetToken: {type:String},
+  passwordResetToken: {
+    type:String,
+},
   token: {
     type: String
   }
 }));
-
-// User.methods.generateToken = function(){
-//   return new Promise((res,req)=>{
-//     jwt.sign({_id: user._id.toString()}, config.get('jwtPrivateKey'),(err,token)=>{
-//       if(err){
-//         return res.status(500).send({
-//           message: 'Internal server error'
-//         })
-//       }
-//   else{
-//     res.send();
-//   }
-// });
-// });
-// }
 
 function validateUser(user) {
   const schema = {
