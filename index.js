@@ -9,6 +9,8 @@ const blogs = require('./routes/blogs');
 const user = require('./routes/user');
 const auth = require('./mw/auth');
 const {mw} = require('./mw/middleware');
+const bodyParser = require('body-parser')
+
 
 if(!config.get('jwtPrivateKey')){
   console.error('fatal error');
@@ -19,10 +21,14 @@ mongoose.connect('mongodb://127.0.0.1:27017/newwprod')
 .then((res)=> console.log('connected to mongodb::'))
 .catch(err=> console.log('could not connect to mongodb' , err));
   
+app.use(bodyParser.json()).use(bodyParser.urlencoded({
+  extended:true
+}))
 app.use(express.json());
 app.use('/api/blogs',blogs);
 app.use('/api/user',user);
 app.use(mw);
+app.set('view engine', 'ejs');
 
 
 var storage = multer.diskStorage({
