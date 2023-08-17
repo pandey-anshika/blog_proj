@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', auth,async (req, res) => {
+  const {user_id} = req.User;
   const error = [];
   const {title, desc, shortDes, createdBy, Tags}= req.body;
   if (!title){
@@ -24,72 +25,31 @@ router.post('/', auth,async (req, res) => {
   if (!shortDes){
       error.push({error:'short description missing', errorType: 'validation'})
   }
-  if(createdBy){
-    let user = null ;
-    try{
-      user = await User.findOne({name:createdBy});
-    }
-    catch(err){
-      console.log(err);
-      return res.status(500).send('something went wrong');
-    }
-    if(!user){
-      error.push({error:'user not found', errorType: 'validation'})
-    }
-  }
-  if(Tags){
-    const tags = Tags.split(',');
-    for (let i = 0; i < tags.length; i++) {
-        const tag = tags[i].trim();
-        if (!tag){
-            error.push({error:'tag missing', errorType: 'validation'})
-        }
-    }
+
+  if(!Array.isArray(Tags) && !Tags.length){
+    error.push({error:'tags missing', errorType: 'validation'})   
 }
-  // if(tags){
-  //   let tags = null ;
-  //   try{
-  //     tags = await User.findOne({Tags:tags});
-  //   }
-  //   catch(err){
-  //     console.log(err);
-  //     return res.status(500).send('something went wrong');
-  //   }
-  //   if(!tags){
-  //     error.push({error:'tags not found', errorType: 'validation'})
-  //   }
-  // }
 
   console.log("error:: ",error)
   if (error.length){
       return res.status(400).send(error);
   }
 
-  try{
-     const alBlog= await User.findOne({name:req.body.name});
-     if(alBlog){
-      return res.status(400).send('already existed');
-   }
-  }
-  catch(err){
-    console.log(err);
-    return res.status(500).send('something went wrong');
-  }
   
     const blog = new Blogs({
         title,
         desc,
         shortDes,
-        createdAt: req.body.createdAt,
-        createdBy,
-        updatedAt: req.body.updatedAt,
+        createdAt: Date.now(),
+        createdBy: user_id,
+        updatedAt: Date.now(),
         Tags
     });
     try {
       const newBlog = await blog.save();
       return res.status(201).send(newBlog);
    } catch (err) {
-      return res.status(500).send(err.message);
+      return res.status(500).send('something went wrong');
    }
   
 });
@@ -121,7 +81,7 @@ if (error.length){
       }
       return res.status(200).send(blog);
     } catch (error) {
-        return console.log(error.message);
+        return res.status(500).send('something went wrong');
     }
 });
 
