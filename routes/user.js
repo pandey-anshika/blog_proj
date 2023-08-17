@@ -122,7 +122,7 @@ router.put('/:id',auth, async(req,res)=>{
         return res.status(200).send("details updated");
 
     } catch (error) {
-        return console.log(error.message);
+        return res.status(500).send('something went wrong');
     }
    
 });
@@ -157,49 +157,6 @@ router.get('/sheet',auth, async(req,res)=>{
 
 })
 
-router.post('/forget-password',auth, async(req, res) => {
-    const {emailId} = req.User;
-    console.log("emailId:: ",emailId)
-    if (emailId) {
-        const user =  User.findOne({ emailId: emailId });
-           if (user) {
-            let resetToken = crypto.randomBytes(32).toString("hex");
-               const salt = bcrypt.genSalt(10);
-               const newHashToken = await bcrypt.hash(resetToken, Number(salt));
-            const isToken = await User.updateOne({emailId: emailId},{passwordResetToken:newHashToken});
-            if(isToken){
-                return res.status(200).json({message: "Token set"});
-           }
-            else{
-                 return res.status(500).send('token notset or not available');
-          }
-        }
-               sendPasswordMail.send(user.emailId, user.passwordResetToken);
-               res.status(200).send('Password reset email sent');
-    }
-
-    else{
-        return res.status(400).send({ error: "emailId missing" });
- } 
-   }); 
-   
-router.get('/forget-password-link',async(req,res,next)=>{
-    const {emailId} = req.body;
-    try{
-        const user =await  User.findOne({ emailId: emailId });
-        if(user){
-            const payload={
-                emailId: user.emailId,
-                user_id: user._id
-            };
-        const token = jwt.sign(payload,'jwtPrivateKey',{expiresIn:'5m'});
-        res.render('forget-password');
-    }
-}catch(error){
-        return res.status(400).send(error.message);
-    } 
-    
-})
 
 router.post('/forget-password-link',async(req,res,next)=>{
     const {emailId} = req.body;
@@ -218,7 +175,7 @@ router.post('/forget-password-link',async(req,res,next)=>{
                         }    
                 });
             }catch(e){
-                return res.status(400).send(e.message);
+                return res.status(500).send('something went wrong');
             }
             const link = `http://localhost:3000/api/user/reset-password-link/${user._id}/${token}`;
             console.log(link);
