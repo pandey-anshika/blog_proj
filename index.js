@@ -9,7 +9,8 @@ const blogs = require('./routes/blogs');
 const user = require('./routes/user');
 const auth = require('./mw/auth');
 const {mw} = require('./mw/middleware');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const catg = require('./routes/catg');
 
 
 if(!config.get('jwtPrivateKey')){
@@ -27,6 +28,7 @@ app.use(bodyParser.json()).use(bodyParser.urlencoded({
 app.use(express.json());
 app.use('/api/blogs',blogs);
 app.use('/api/user',user);
+app.use('/api/catg', catg);
 app.use(mw);
 app.set('view engine', 'ejs');
 

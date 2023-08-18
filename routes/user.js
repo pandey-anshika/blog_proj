@@ -122,7 +122,7 @@ router.put('/:id',auth, async(req,res)=>{
         return res.status(200).send("details updated");
 
     } catch (error) {
-        return res.status(500).send('something went wrong');
+        return res.status(500).send('something went wr');
     }
    
 });
