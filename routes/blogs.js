@@ -7,7 +7,7 @@ const {User}= require('../models/user');
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
-  const blogs = await Blogs.find().sort( {createdAt : 1} ).select({title:1});
+  const blogs = await Blogs.find().sort( {createdAt : -1} );
   res.send(blogs);
 });
 
@@ -104,4 +104,83 @@ router.get('/:id',auth, async (req, res) => {
   res.send(blog);
 });
 
-module.exports = router; 
+router.post('/:blogId/comments',auth, async(req,res)=>{
+  const {user_id} = req.User;
+  const error = [];
+  const {content}= req.body;
+  if (!content){
+      error.push({error:'comment missing', errorType: 'validation'})
+  }
+
+  console.log("error:: ",error)
+  if (error.length){
+      return res.status(400).send(error);
+  }
+
+  const comment = {
+    content,
+    createdAt: Date.now(),
+    userId: user_id
+  }
+
+  const id =new mongoose.Types.ObjectId( req.params.blogId) ;
+  const blog =await Blogs.findOne({_id: id});
+    if(!blog){
+      return res.status(400).json({message: "Blog not found"});
+      }
+     else{
+      blog.Comments.push(comment);
+      blog.save();
+      return res.status(201).send(blog);
+     }
+  })
+
+router.put('/:blogId/comments/:commentId',auth, async(req,res)=>{
+  const {user_id} = req.User;
+  const {blogId, commentId} = req.params  ;
+  const error = [];
+  const {content}= req.body;
+  if (!commentId){
+      error.push({error:'comment missing', errorType: 'validation'})
+  }
+  if (!content){
+    error.push({error:'content missing', errorType: 'validation'})
+    }
+  console.log("error:: ",error);
+  if (error.length){
+      return res.status(400).send(error);
+  }
+
+  const blog = await Blogs.findById(new mongoose.Types.ObjectId(blogId))
+  if(!blog){
+    return res.status(400).json({message: "blogId is missing"});
+  }
+  const comment = blog.Comments.id(new mongoose.Types.ObjectId(commentId))
+  if(!comment){
+    return res.status(400).json({message: "comment is missingwith this Id"});
+  }else{
+    comment.content = content;
+    comment.updatedAt = Date.now();
+    blog.save();
+    return res.status(200).send(comment);
+  }
+  
+})
+
+router.delete('/:blogId/comments/:commentId',auth, async(req,res)=>{
+  const {blogId, commentId} = req.params  ;
+  const blog = await Blogs.findById(new mongoose.Types.ObjectId(blogId))
+  if(!blog){
+    return res.status(400).json({message: "blog is missing with this id"});
+  }
+  const comment = blog.Comments.id(new mongoose.Types.ObjectId(commentId))
+  if(!comment){
+    return res.status(400).json({message: "comment is missingwith this Id"});
+  }else{
+    blog.Comments.pull(comment);
+    blog.save();
+    return res.status(200).send(comment);
+  }
+
+})
+module.exports = router;  
