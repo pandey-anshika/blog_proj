@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const {User}= require('../models/user');
 const jwt = require('jsonwebtoken');
+const {Category, validateUser} = require('../models/category')
 
 router.get('/', async (req, res) => {
 const blogs = await Blogs.find().sort( {createdAt : -1} );
@@ -28,6 +29,11 @@ router.post('/', auth,async (req, res) => {
 
   if(!category){
     error.push({error:"Category is required", errorType :"Validation"})
+  }else{
+    let cat=await Category.findOne({'name':category});
+    if(!cat){
+      error.push({error:`You are not authorized to add blog in ${category}`, errorType :"Authorization"});
+  }
   }
 
   if(!Array.isArray(Tags) && !Tags.length){
