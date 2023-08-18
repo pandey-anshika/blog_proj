@@ -53,7 +53,11 @@ const Blogs= mongoose.model('Blogs', new mongoose.Schema( {
         type: Array,
         default: []
       },
-      Comments:[commentSchema]
+      Comments:[commentSchema],
+      category:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
+      }
 }));
 
 

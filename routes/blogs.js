@@ -7,14 +7,14 @@ const {User}= require('../models/user');
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
-  const blogs = await Blogs.find().sort( {createdAt : -1} );
+const blogs = await Blogs.find().sort( {createdAt : -1} );
   res.send(blogs);
 });
 
 router.post('/', auth,async (req, res) => {
   const {user_id} = req.User;
   const error = [];
-  const {title, desc, shortDes, createdBy, Tags}= req.body;
+  const {title, desc, shortDes, Tags, category}= req.body;
   if (!title){
       error.push({error:'title missing', errorType: 'validation'})
   }
@@ -24,6 +24,10 @@ router.post('/', auth,async (req, res) => {
 
   if (!shortDes){
       error.push({error:'short description missing', errorType: 'validation'})
+  }
+
+  if(!category){
+    error.push({error:"Category is required", errorType :"Validation"})
   }
 
   if(!Array.isArray(Tags) && !Tags.length){
@@ -43,7 +47,8 @@ router.post('/', auth,async (req, res) => {
         createdAt: Date.now(),
         createdBy: user_id,
         updatedAt: Date.now(),
-        Tags
+        Tags,
+        category,
     });
     try {
       const newBlog = await blog.save();
@@ -97,7 +102,7 @@ router.delete('/:id',auth, async (req, res) => {
 });
 
 router.get('/:id',auth, async (req, res) => {
-  const blog = await Blogs.findById(req.params.id);
+  const blog = await Blogs.findById(req.params.id).populate('createdBy').populate('category','title');
 
   if (!blog) return res.status(404).send('The blog was not found.');
 
